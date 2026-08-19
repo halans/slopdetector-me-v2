@@ -1,0 +1,29 @@
+{
+  "include": ["docs/**/*.md", "README.md"],
+  "exclude": ["**/node_modules/**", "**/CHANGELOG.md", "docs/generated/**"],
+
+  "threshold": 45,
+  "maxWarnings": 20,
+
+  "rules": {
+    "tool_artifacts": "error",
+    "ai_self_reference": "error",
+    "placeholder_text": "error",
+
+    "collaborative_scaffolding": "error",
+    "knowledge_cutoff": "error",
+    "emoji_formatting": "warn",
+
+    "significance_statements": "warn",
+    "participial_tackon": "warn",
+    "negative_parallelism": "warn",
+    "ritual_conclusion": "warn",
+    "vague_attribution": "warn",
+    "formatting_tells": "off",
+
+    "rule_of_three": "off",
+    "ai_vocabulary": "off",
+    "copula_avoidance": "off",
+    "business_jargon": "off"
+  }
+}

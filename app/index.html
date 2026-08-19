@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Fingerprints of Machine Prose</title>
+<meta name="description" content="A tested regex catalogue of the surface patterns that mark English text as LLM-generated — with honest false-positive numbers.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0f1115; --ink-2:#3a4048; --ink-3:#6b7480;
+  --paper:#ffffff; --paper-2:#f6f7f9; --paper-3:#eceef2;
+  --rule:#dfe3e9;
+  --accent:#1b47c4; --accent-soft:#eef2ff;
+  --flag:#b23214; --flag-soft:#fdf0ea;
+  --crit:#a3172b; --high:#b45309; --med:#1b47c4; --low:#5b6472;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Inter',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:17px;line-height:1.65;
+  font-feature-settings:"kern","liga","cv05";-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 6vw}
+.narrow{max-width:720px;margin-left:auto;margin-right:auto}
+h1,h2,h3,h4{line-height:1.15;letter-spacing:-.021em;margin:0}
+a{color:var(--accent)}
+code,pre{font-family:var(--mono);font-variant-ligatures:none}
+
+/* ---------- masthead ---------- */
+.mast{border-bottom:1px solid var(--rule);padding:20px 0;position:sticky;top:0;
+  background:rgba(255,255,255,.92);backdrop-filter:saturate(180%) blur(12px);z-index:50}
+.mast .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px}
+.brand{font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink)}
+.brand span{color:var(--accent)}
+.mast nav{display:flex;gap:22px;font-size:13.5px;font-weight:500}
+.mast nav a{color:var(--ink-2);text-decoration:none}
+.mast nav a:hover{color:var(--accent)}
+@media(max-width:720px){.mast nav{display:none}}
+
+/* ---------- hero ---------- */
+.hero{padding:88px 0 56px;border-bottom:1px solid var(--rule)}
+.kicker{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:22px}
+.hero h1{font-size:clamp(2.6rem,6.4vw,4.6rem);font-weight:700;letter-spacing:-.035em;max-width:16ch}
+.standfirst{font-family:'Newsreader',Georgia,serif;font-size:clamp(1.2rem,2.3vw,1.5rem);
+  line-height:1.5;color:var(--ink-2);max-width:60ch;margin-top:26px}
+.hero-meta{display:flex;flex-wrap:wrap;gap:10px 28px;margin-top:34px;
+  font-family:var(--mono);font-size:12.5px;color:var(--ink-3)}
+.hero-meta b{color:var(--ink);font-weight:500}
+
+/* ---------- upfront warning ---------- */
+.warning{margin:44px 0 0;border:1px solid var(--rule);border-left:3px solid var(--flag);
+  background:var(--flag-soft);padding:26px 30px;border-radius:2px}
+.warning h2{font-size:1.02rem;font-family:var(--mono);text-transform:uppercase;
+  letter-spacing:.1em;font-weight:700;color:var(--flag);margin-bottom:12px}
+.warning p{margin:0 0 12px;font-size:16px;color:#5c2a18}
+.warning p:last-child{margin-bottom:0}
+
+/* ---------- sections ---------- */
+section{padding:76px 0}
+section+section{border-top:1px solid var(--rule)}
+.sec-label{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:16px}
+h2.big{font-size:clamp(1.9rem,3.6vw,2.7rem);font-weight:700;letter-spacing:-.03em;max-width:20ch}
+.lede{font-size:1.14rem;color:var(--ink-2);max-width:66ch;margin-top:20px}
+p{max-width:70ch}
+section p+p{margin-top:1.1em}
+h3.sub{font-size:1.28rem;font-weight:600;margin:44px 0 14px;letter-spacing:-.018em}
+
+/* ---------- data tables ---------- */
+.tbl-wrap{overflow-x:auto;margin:30px 0;border:1px solid var(--rule);border-radius:3px}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+caption{text-align:left;font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);padding:14px 18px;border-bottom:1px solid var(--rule);
+  background:var(--paper-2)}
+th{text-align:left;font-weight:600;font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-3);padding:12px 18px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:12px 18px;border-bottom:1px solid var(--paper-3);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13.5px}
+tbody tr:hover{background:var(--paper-2)}
+.pos{color:var(--flag);font-weight:600}
+.neg{color:#15803d;font-weight:600}
+
+/* ---------- callout ---------- */
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);
+  padding:22px 26px;margin:34px 0;border-radius:0 3px 3px 0}
+.callout p{margin:0;font-size:16px;color:#1a2e6b}
+.callout p+p{margin-top:10px}
+
+/* ---------- toc ---------- */
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:32px 0 8px}
+.toc-item{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border:1px solid var(--rule);
+  border-radius:999px;font-size:13px;font-weight:500;text-decoration:none;color:var(--ink-2);
+  background:var(--paper);transition:.15s}
+.toc-item:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.dot{width:7px;height:7px;border-radius:50%;flex:none}
+.toc-item[data-sev=critical] .dot{background:var(--crit)}
+.toc-item[data-sev=high] .dot{background:var(--high)}
+.toc-item[data-sev=medium] .dot{background:var(--med)}
+.toc-item[data-sev=low] .dot{background:var(--low)}
+
+/* ---------- category cards ---------- */
+.cats{display:grid;gap:22px;margin-top:38px}
+.cat{border:1px solid var(--rule);border-radius:3px;padding:28px 30px;background:var(--paper)}
+.cat[data-sev=critical]{border-left:3px solid var(--crit)}
+.cat[data-sev=high]{border-left:3px solid var(--high)}
+.cat[data-sev=medium]{border-left:3px solid var(--med)}
+.cat[data-sev=low]{border-left:3px solid var(--low)}
+.cat-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:18px;align-items:flex-start}
+.cat-title{display:flex;flex-wrap:wrap;align-items:center;gap:11px}
+.cat-title h3{font-size:1.24rem;font-weight:650;letter-spacing:-.018em}
+.sev{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  padding:3px 8px;border-radius:2px;color:#fff}
+.sev-critical{background:var(--crit)} .sev-high{background:var(--high)}
+.sev-medium{background:var(--med)} .sev-low{background:var(--low)}
+.cat-id{font-size:12px;color:var(--ink-3);background:var(--paper-2);padding:2px 7px;border-radius:2px}
+.cat-stats{display:flex;gap:22px;margin:0}
+.cat-stats div{text-align:right}
+.cat-stats dt{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.cat-stats dd{margin:2px 0 0;font-family:var(--mono);font-size:15px;font-weight:500;
+  font-variant-numeric:tabular-nums}
+.why,.caution{font-size:15.5px;margin:16px 0 0;max-width:78ch;color:var(--ink-2)}
+.why strong,.caution strong{color:var(--ink);font-weight:600}
+.caution{color:var(--ink-3)}
+.pats{margin-top:20px;border-top:1px solid var(--paper-3);padding-top:16px}
+.pats summary{cursor:pointer;font-family:var(--mono);font-size:12.5px;color:var(--accent);
+  font-weight:500;list-style:none}
+.pats summary::-webkit-details-marker{display:none}
+.pats summary::before{content:"▸ ";display:inline-block;transition:.15s}
+.pats[open] summary::before{content:"▾ "}
+.pat{margin-top:20px;padding-left:16px;border-left:2px solid var(--paper-3)}
+.pat-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.pat-id{font-size:12.5px;font-weight:700;color:var(--ink)}
+.vendor{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+  background:var(--paper-3);color:var(--ink-3);padding:2px 7px;border-radius:2px}
+.vendor.era{background:var(--accent-soft);color:var(--accent);text-transform:none;letter-spacing:0}
+.pat-note{font-size:14px;color:var(--ink-3);margin:6px 0 0;max-width:70ch}
+pre.rx{background:#0f1115;color:#e6e9ef;padding:13px 16px;border-radius:3px;overflow-x:auto;
+  font-size:12.5px;line-height:1.6;margin:10px 0 0}
+pre.rx code{color:inherit;white-space:pre}
+ul.ex{list-style:none;padding:0;margin:10px 0 0;display:flex;flex-wrap:wrap;gap:7px}
+ul.ex li span{display:inline-block;font-family:var(--mono);font-size:12px;background:var(--flag-soft);
+  color:var(--flag);padding:4px 9px;border-radius:2px;border:1px solid #f4dbd0}
+
+/* ---------- checker ---------- */
+#checker{background:var(--paper-2)}
+.chk-grid{display:grid;grid-template-columns:1fr 380px;gap:26px;margin-top:34px}
+@media(max-width:940px){.chk-grid{grid-template-columns:1fr}}
+textarea{width:100%;min-height:340px;padding:20px 22px;border:1px solid var(--rule);border-radius:3px;
+  font-family:var(--mono);font-size:13.5px;line-height:1.7;resize:vertical;background:var(--paper);
+  color:var(--ink)}
+textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+.chk-controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;align-items:center}
+button{font-family:var(--sans);font-size:14px;font-weight:600;padding:10px 20px;border-radius:3px;
+  border:1px solid var(--rule);background:var(--paper);color:var(--ink);cursor:pointer;transition:.15s}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+button.primary:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.panel{border:1px solid var(--rule);border-radius:3px;background:var(--paper);padding:24px;
+  align-self:start;position:sticky;top:96px}
+.gauge{text-align:center;padding-bottom:20px;border-bottom:1px solid var(--paper-3)}
+.gauge .n{font-family:var(--mono);font-size:60px;font-weight:700;line-height:1;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.gauge .band{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;
+  margin-top:10px;font-weight:700}
+.gauge .sub{font-size:12.5px;color:var(--ink-3);margin-top:8px}
+.bar{height:5px;background:var(--paper-3);border-radius:99px;margin-top:16px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .4s ease}
+.res-list{margin-top:18px;display:flex;flex-direction:column;gap:2px;max-height:460px;overflow-y:auto}
+.res{padding:11px 0;border-bottom:1px solid var(--paper-3)}
+.res:last-child{border-bottom:0}
+.res-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.res-name{font-size:13.5px;font-weight:600}
+.res-n{font-family:var(--mono);font-size:12px;color:var(--ink-3);white-space:nowrap}
+.res-hits{margin-top:7px;display:flex;flex-wrap:wrap;gap:5px}
+.res-hits span{font-family:var(--mono);font-size:11px;background:var(--flag-soft);color:var(--flag);
+  padding:2px 7px;border-radius:2px;border:1px solid #f4dbd0}
+.metrics{margin-top:18px;padding-top:16px;border-top:1px solid var(--paper-3);
+  font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+.metrics div{display:flex;justify-content:space-between;padding:4px 0}
+.metrics b{color:var(--ink);font-weight:500}
+.empty{text-align:center;color:var(--ink-3);font-size:14px;padding:40px 10px}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--rule);padding:56px 0 76px;font-size:14px;color:var(--ink-3)}
+footer h4{font-size:12px;font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink);margin-bottom:14px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:36px}
+footer ol{padding-left:18px;margin:0}
+footer li{margin-bottom:9px;line-height:1.55}
+footer a{color:var(--accent);text-decoration:none}
+footer a:hover{text-decoration:underline}
+.colophon{margin-top:44px;padding-top:24px;border-top:1px solid var(--rule);font-size:13px}
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="wrap">
+    <div class="brand">slop<span>/</span>patterns</div>
+    <nav>
+      <a href="#mechanism">Mechanism</a>
+      <a href="#taxonomy">Taxonomy</a>
+      <a href="#validation">Validation</a>
+      <a href="#limits">Limits</a>
+      <a href="https://pub.hyperagent.com/p/QEeeAx22m4-oPVFXSGkfwe5hQvB02Q7DHVEBma1svHQ" target="_blank" rel="noopener noreferrer">SlopDetector →</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="kicker">Computational stylistics · 95 patterns · 20 categories</div>
+    <h1>The fingerprints of machine prose</h1>
+    <p class="standfirst">Large language models have a house style. It is measurable, it is documented in the peer-reviewed literature, and a good deal of it can be caught with regular expressions. Here is the full catalogue, the JavaScript to run it, and the false-positive numbers nobody publishing an "AI detector" wants to show you.</p>
+    <div class="hero-meta">
+      <span>Corpus <b>63,143 words</b></span>
+      <span>Human control <b>frozen Dec 2017</b></span>
+      <span>Self-test <b>101/101</b></span>
+      <span>License <b>CC BY-NC-SA 4.0</b></span>
+    </div>
+  </div>
+
+  <div class="warning narrow">
+    <h2>Read this before you use any of it</h2>
+    <p>This is a <strong>style linter</strong>, not an authorship detector. It finds writing habits that language models exhibit more often than most human writers. That is all it does.</p>
+    <p>The distinction is not pedantic. In 2023 Liang and colleagues ran seven commercial GPT detectors over 91 TOEFL essays written by humans. The detectors flagged <strong>61.22%</strong> of them as machine-written, against 5.19% for essays by US eighth-graders. <strong>97.8%</strong> of the human TOEFL essays were flagged by at least one detector. The mechanism is simple and it is baked into every tool of this kind, including this one: writing in a careful, formal, limited-vocabulary register looks exactly like what these systems are trained to punish.</p>
+    <p>Use these patterns to reread your own sentences. Do not use them to accuse anybody of anything.</p>
+  </div>
+</div>
+
+<section id="mechanism">
+  <div class="wrap narrow">
+    <div class="sec-label">01 — Mechanism</div>
+    <h2 class="big">Why the house style exists</h2>
+    <p class="lede">The tells are not random. Each family of them traces back to something specific in how these models are built and served.</p>
+
+    <h3 class="sub">Frequency regression</h3>
+    <p>A language model samples from a probability distribution over tokens. Averaged across millions of generations, its output drifts toward whatever was statistically common in training, then further toward whatever human raters rewarded. Specific facts get replaced by generic, positive-sounding description because generic description is what the distribution says comes next.</p>
+    <p>The measured effect is large. Kobak and colleagues compared 15.1 million PubMed abstracts against frequencies extrapolated from pre-ChatGPT trends. In 2024, <em>delves</em> appeared at <strong>28 times</strong> its expected rate. They counted <strong>454 excess words</strong> that year, against a previous record of 190 at the peak of the COVID-19 pandemic — and where the pandemic's excess words were topic nouns, 2024's were overwhelmingly <em>style</em> words: 66% verbs, 14% adjectives. Juzek and Ward, working on scientific abstracts, put the pre/post ratio for <em>delving</em> at roughly 2,240× and <em>showcasing</em> at 1,396×.</p>
+
+    <h3 class="sub">Reinforcement learning rewards a register</h3>
+    <p>Instruction tuning teaches the model to be helpful, balanced, and complete. Those are conversational virtues, and they produce conversational artifacts: the acknowledgement before the answer, the hedge that reminds you results may vary, the summary paragraph that closes a section you have just finished reading. Juzek and Ward found that learning from human feedback <em>amplifies</em> frequency biases already present in pre-training, rather than smoothing them out.</p>
+
+    <h3 class="sub">Markdown leaking into prose</h3>
+    <p>These systems are trained and served in Markdown. Most of that formatting is visibly structural — headings, bullets, bold — and gets stripped or noticed when text is moved somewhere else. The em dash is the exception: it is simultaneously a Markdown-era typographic habit and a legitimate piece of prose punctuation, so it survives the move. In our own corpus the gap is stark, <strong>2.65 em dashes per thousand words in LLM text against 0.26 in the human control</strong>, a tenfold difference. But this signal is decaying fastest of all: OpenAI explicitly tuned GPT-5.1 to suppress em dashes in late 2025, and by July 2026 <em>The Economist</em> reported that among current models only Claude used them more than professional human writers.</p>
+
+    <h3 class="sub">The interface bleeds through</h3>
+    <p>The highest-precision signals are not stylistic at all. They are machine artifacts — the internal citation markup a chatbot renders into its own web UI, copied out along with the text. ChatGPT leaves <code>:contentReference[oaicite:16]</code> and <code>citeturn0search1</code>. Gemini leaves <code>[cite: 17]</code> and <code>[span_2](start_span)</code>. Grok leaves <code>&lt;grok-card data-id=…&gt;</code>. DeepSeek leaves <code>【85†L261-269】</code>. Perplexity leaves <code>[attached_file:1]</code>. None of these is a writing habit. Each is proof that a specific product was in the loop.</p>
+  </div>
+</section>
+
+<section id="taxonomy">
+  <div class="wrap">
+    <div class="narrow" style="margin-bottom:8px">
+      <div class="sec-label">02 — Taxonomy</div>
+      <h2 class="big">20 categories, 95 patterns</h2>
+      <p class="lede">Ordered by severity. <strong>Critical</strong> means a machine artifact that a human typing prose essentially never produces. <strong>Low</strong> means an ordinary English word that is meaningless alone and only informative as density. Every regex below is the live source from the library, and every listed example is asserted in the test suite.</p>
+    </div>
+    <div class="toc"><a href="#cat-tool_artifacts" class="toc-item" data-sev="critical"><span class="dot"></span>Chatbot tool artifacts</a><a href="#cat-ai_self_reference" class="toc-item" data-sev="critical"><span class="dot"></span>Model self-identification</a><a href="#cat-placeholder_text" class="toc-item" data-sev="critical"><span class="dot"></span>Unfilled placeholders</a><a href="#cat-knowledge_cutoff" class="toc-item" data-sev="high"><span class="dot"></span>Knowledge-cutoff and source-gap hedging</a><a href="#cat-collaborative_scaffolding" class="toc-item" data-sev="high"><span class="dot"></span>Conversational scaffolding</a><a href="#cat-emoji_formatting" class="toc-item" data-sev="high"><span class="dot"></span>Emoji as structure</a><a href="#cat-significance_statements" class="toc-item" data-sev="medium"><span class="dot"></span>Significance and legacy inflation</a><a href="#cat-participial_tackon" class="toc-item" data-sev="medium"><span class="dot"></span>Trailing participial commentary</a><a href="#cat-negative_parallelism" class="toc-item" data-sev="medium"><span class="dot"></span>Negative parallelism</a><a href="#cat-rule_of_three" class="toc-item" data-sev="medium"><span class="dot"></span>Mechanical triads</a><a href="#cat-ritual_conclusion" class="toc-item" data-sev="medium"><span class="dot"></span>Ritual conclusions</a><a href="#cat-challenges_and_future" class="toc-item" data-sev="medium"><span class="dot"></span>Challenges-and-future formula</a><a href="#cat-vague_attribution" class="toc-item" data-sev="medium"><span class="dot"></span>Vague attribution</a><a href="#cat-editorial_hedging" class="toc-item" data-sev="medium"><span class="dot"></span>Editorialising hedges</a><a href="#cat-promotional_puffery" class="toc-item" data-sev="medium"><span class="dot"></span>Promotional puffery</a><a href="#cat-formatting_tells" class="toc-item" data-sev="medium"><span class="dot"></span>Structural formatting tells</a><a href="#cat-copula_avoidance" class="toc-item" data-sev="low"><span class="dot"></span>Copula avoidance</a><a href="#cat-ai_vocabulary" class="toc-item" data-sev="low"><span class="dot"></span>Overrepresented vocabulary</a><a href="#cat-business_jargon" class="toc-item" data-sev="low"><span class="dot"></span>Consulting jargon</a><a href="#cat-data_analysis_phrases" class="toc-item" data-sev="low"><span class="dot"></span>Analysis-report register</a></div>
+    <div class="cats">
+    <article class="cat" id="cat-tool_artifacts" data-sev="critical">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-critical">critical</span>
+          <h3>Chatbot tool artifacts</h3>
+          <code class="cat-id">tool_artifacts</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>4.95</dd></div>
+          <div><dt>human /1k</dt><dd>0</dd></div>
+          <div><dt>lift</dt><dd>∞ (zero human hits)</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Internal citation and rendering markup that leaks when a user copies a chatbot answer out of the web UI. Each vendor has its own signature.</p>
+      <p class="caution"><strong>False positives.</strong> Almost none. The only realistic false positive is an article that quotes these markers while discussing AI detection — such as this one.</p>
+      <details class="pats">
+        <summary>10 patterns · 40 pts each, capped at 60</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">openai_citation_markup</code>
+          <span class="vendor">ChatGPT</span>
+          
+        </div>
+        <p class="pat-note">ChatGPT reference placeholders.</p>
+        <pre class="rx"><code>/:?contentReference\[oaicite:\d+\]|oai_citation:?\s*\d*|\boaicite\b/g</code></pre>
+        <ul class="ex"><li><span>:contentReference[oaicite:16]{index=16}</span></li><li><span>[oai_citation:0‡example.com]</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">openai_turn_tokens</code>
+          <span class="vendor">ChatGPT</span>
+          
+        </div>
+        <p class="pat-note">Search/image result tokens, PUA-wrapped in the original response.</p>
+        <pre class="rx"><code>/\b(?:cite)?turn\d+(?:search|image|news|file|view|forecast)\d+\b/g</code></pre>
+        <ul class="ex"><li><span>citeturn0search1</span></li><li><span>turn0image4</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">openai_attribution_json</code>
+          <span class="vendor">ChatGPT</span>
+          
+        </div>
+        <p class="pat-note">JSON attribution blob appended to sentences.</p>
+        <pre class="rx"><code>/\{\s*"attribution"\s*:\s*\{\s*"attributableIndex"/g</code></pre>
+        <ul class="ex"><li><span>({"attribution":{"attributableIndex":"1009-1"}})</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">gemini_cite_markers</code>
+          <span class="vendor">Gemini</span>
+          
+        </div>
+        <p class="pat-note">Gemini inline citation markers.</p>
+        <pre class="rx"><code>/\[cite:\s*\d+(?:\s*,\s*\d+)*\]|\[cite_start\]/g</code></pre>
+        <ul class="ex"><li><span>[cite: 17]</span></li><li><span>[cite: 19, 20, 21]</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">gemini_span_markers</code>
+          <span class="vendor">Gemini</span>
+          
+        </div>
+        <p class="pat-note">Gemini span formatting bug.</p>
+        <pre class="rx"><code>/\[span_\d+\]\((?:start|end)_span\)/g</code></pre>
+        <ul class="ex"><li><span>[span_2](start_span)</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">grok_cards</code>
+          <span class="vendor">Grok</span>
+          
+        </div>
+        <p class="pat-note">Grok citation card markup.</p>
+        <pre class="rx"><code>/&lt;grok-card\b|grok_render_citation_card_json|data-type="citation_card"/g</code></pre>
+        <ul class="ex"><li><span>&lt;grok-card data-id="e8ff4f" data-type="citation_card"&gt;</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">deepseek_lenticular</code>
+          <span class="vendor">DeepSeek</span>
+          
+        </div>
+        <p class="pat-note">Lenticular-bracket + dagger source refs.</p>
+        <pre class="rx"><code>/【\d+†L?\d+(?:-L?\d+)?】/g</code></pre>
+        <ul class="ex"><li><span>【85†L261-269】</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">perplexity_tags</code>
+          <span class="vendor">Perplexity</span>
+          
+        </div>
+        <p class="pat-note">Perplexity attachment and web-result tags.</p>
+        <pre class="rx"><code>/\[(?:attached_file|web|search):\s*\d+\]|ppl-ai-file-upload/g</code></pre>
+        <ul class="ex"><li><span>[attached_file:1]</span></li><li><span>[web:1]</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">writing_variant_block</code>
+          <span class="vendor">unclassified</span>
+          
+        </div>
+        <p class="pat-note">Document-variant fence seen from mid-2026.</p>
+        <pre class="rx"><code>/:{3}\s*(?:writing|ecriture|écriture)\s*\{\s*(?:variant|variante)\s*=/gi</code></pre>
+        <ul class="ex"><li><span>:::writing{variant="document" id="68427"}</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">chatgpt_utm</code>
+          <span class="vendor">ChatGPT</span>
+          
+        </div>
+        <p class="pat-note">Tracking parameter on links copied out of ChatGPT.</p>
+        <pre class="rx"><code>/utm_source=(?:chatgpt\.com|openai)/gi</code></pre>
+        <ul class="ex"><li><span>https://example.com/?utm_source=chatgpt.com</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-ai_self_reference" data-sev="critical">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-critical">critical</span>
+          <h3>Model self-identification</h3>
+          <code class="cat-id">ai_self_reference</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0</dd></div>
+          <div><dt>human /1k</dt><dd>0</dd></div>
+          <div><dt>lift</dt><dd>not exercised</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> The assistant describing its own nature or limits. Refusal and disclaimer boilerplate that was never edited out.</p>
+      <p class="caution"><strong>False positives.</strong> Quoted examples in writing about AI. Check whether the phrase sits inside quotation marks.</p>
+      <details class="pats">
+        <summary>4 patterns · 35 pts each, capped at 50</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">as_an_ai</code>
+          
+          
+        </div>
+        <p class="pat-note">The canonical tell.</p>
+        <pre class="rx"><code>/\bas an? (?:AI|artificial intelligence)(?: language)?(?: model| assistant| system)?\b/gi</code></pre>
+        <ul class="ex"><li><span>As an AI language model, I cannot...</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">as_a_llm</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bas a large language model\b/gi</code></pre>
+        <ul class="ex"><li><span>As a large language model, I do not have...</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">no_personal_capacity</code>
+          
+          
+        </div>
+        <p class="pat-note">Capability disclaimer.</p>
+        <pre class="rx"><code>/\bI (?:don't|do not|cannot|can't) have (?:personal |any )?(?:opinions|feelings|beliefs|preferences|access to real[- ]time|the ability to browse)\b/gi</code></pre>
+        <ul class="ex"><li><span>I don't have personal opinions, but...</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">language_model_self</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bI(?:'m| am) (?:an? )?(?:AI|language model|chatbot|virtual assistant)\b/gi</code></pre>
+        <ul class="ex"><li><span>I'm an AI, so I...</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-placeholder_text" data-sev="critical">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-critical">critical</span>
+          <h3>Unfilled placeholders</h3>
+          <code class="cat-id">placeholder_text</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0</dd></div>
+          <div><dt>human /1k</dt><dd>0</dd></div>
+          <div><dt>lift</dt><dd>chat-register only</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Template slots the model emitted for a human to fill, shipped unfilled.</p>
+      <p class="caution"><strong>False positives.</strong> Documentation and code samples use angle-bracket placeholders on purpose. Restrict this check to prose, not code blocks.</p>
+      <details class="pats">
+        <summary>4 patterns · 25 pts each, capped at 40</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">bracket_insert</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\[(?:INSERT|ADD|ENTER|YOUR|PASTE|TODO|TBD|XX+)[^\]\n]{0,40}\]/gi</code></pre>
+        <ul class="ex"><li><span>[INSERT SOURCE URL]</span></li><li><span>[Your Name Here]</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">screaming_snake_slot</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:INSERT|PASTE|ADD)_[A-Z_]{3,}\b|\bSOURCE_(?:URL|PUBLISHER|NAME)\b|\bURL_HERE\b/g</code></pre>
+        <ul class="ex"><li><span>INSERT_SOURCE_URL</span></li><li><span>PASTE_URL_HERE</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">dummy_date</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:19|20)\d{2}-(?:xx|XX|mm|MM)-(?:xx|XX|dd|DD)\b|\bYYYY-MM-DD\b/g</code></pre>
+        <ul class="ex"><li><span>2025-xx-xx</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">delete_before_submission</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:delete|remove) this (?:section|line|note|paragraph) before (?:submission|publishing|sending)\b/gi</code></pre>
+        <ul class="ex"><li><span>Delete this section before submission.</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-knowledge_cutoff" data-sev="high">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-high">high</span>
+          <h3>Knowledge-cutoff and source-gap hedging</h3>
+          <code class="cat-id">knowledge_cutoff</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0.12</dd></div>
+          <div><dt>human /1k</dt><dd>0</dd></div>
+          <div><dt>lift</dt><dd>∞ (zero human hits)</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> The model signalling that its training data ran out, or narrating the thinness of its own retrieved sources instead of just omitting the claim.</p>
+      <p class="caution"><strong>False positives.</strong> Legitimate scholarship does say "records are scarce". The tell is the first-person framing and the reference to "available information".</p>
+      <details class="pats">
+        <summary>6 patterns · 14 pts each, capped at 40</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">last_update</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:as of|up to|until) my (?:last |latest |most recent )?(?:knowledge |training |data )?(?:update|cutoff|cut-off)\b/gi</code></pre>
+        <ul class="ex"><li><span>As of my last knowledge update, ...</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">available_information</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bbased on (?:the )?(?:available|provided) (?:information|sources|data)\b|\bin the (?:provided|given) sources\b/gi</code></pre>
+        <ul class="ex"><li><span>Based on available information, ...</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">details_limited</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:while |although )?(?:specific |further |additional )?details (?:are|remain) (?:limited|scarce|sparse|not widely (?:available|documented|disclosed))\b/gi</code></pre>
+        <ul class="ex"><li><span>While specific details are limited, ...</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">not_widely_documented</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bnot widely (?:available|documented|disclosed|reported|publicised|publicized)\b/gi</code></pre>
+        <ul class="ex"><li><span>His early career is not widely documented.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">private_life_speculation</code>
+          
+          
+        </div>
+        <p class="pat-note">Gap-filling speculation about biography subjects.</p>
+        <pre class="rx"><code>/\bkeeps? (?:much of )?(?:his|her|their) personal life private\b|\bmaintains? a low profile\b/gi</code></pre>
+        <ul class="ex"><li><span>She keeps much of her personal life private.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">inference_disclosure</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bI(?:'ve| have) inferred\b|\bmy analysis is based on\b|\blikely due to limited (?:mainstream )?(?:exposure|coverage|documentation)\b/gi</code></pre>
+        <ul class="ex"><li><span>I've inferred common motifs...</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-collaborative_scaffolding" data-sev="high">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-high">high</span>
+          <h3>Conversational scaffolding</h3>
+          <code class="cat-id">collaborative_scaffolding</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0.08</dd></div>
+          <div><dt>human /1k</dt><dd>0</dd></div>
+          <div><dt>lift</dt><dd>∞ (zero human hits)</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Turn-taking pleasantries from the chat interface. RLHF rewards them; they have no function inside a finished document.</p>
+      <p class="caution"><strong>False positives.</strong> Genuine correspondence, teaching material, and newsletters legitimately address a reader. Weigh by genre — an encyclopedia entry should have none.</p>
+      <details class="pats">
+        <summary>7 patterns · 12 pts each, capped at 45</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">hope_this_helps</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bI hope (?:this|that) helps\b|\bhope this (?:helps|is helpful)\b/gi</code></pre>
+        <ul class="ex"><li><span>I hope this helps!</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">enthusiastic_openers</code>
+          
+          
+        </div>
+        <p class="pat-note">Opening acknowledgement token.</p>
+        <pre class="rx"><code>/(?:^|[.!?]\s+|\n)\s*(?:Certainly|Absolutely|Of course|Sure thing|Great question|Excellent question|Fantastic question|Happy to help)\s*[!,.]/g</code></pre>
+        <ul class="ex"><li><span>Certainly! Here is a summary.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">offer_more</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bwould you like me to\b|\blet me know if (?:you|there|that|I)\b|\bfeel free to (?:ask|reach out|let me know)\b|\bif you(?:'d| would) like,? I can\b/gi</code></pre>
+        <ul class="ex"><li><span>Let me know if you would like me to expand this.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">here_is_a</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bhere(?:'s| is| are)\s+(?:a|an|the)\s+(?:brief |quick |detailed |comprehensive |more detailed )?(?:breakdown|overview|summary|rundown|deep dive|look at)\b/gi</code></pre>
+        <ul class="ex"><li><span>Here's a detailed breakdown of the options.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">lets_dive_in</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\blet(?:'s| us) (?:dive (?:in|into)|explore|take a (?:look|closer look)|unpack|break (?:this|it) down|get started)\b/gi</code></pre>
+        <ul class="ex"><li><span>Let's dive into the details.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">youre_right</code>
+          
+          
+        </div>
+        <p class="pat-note">Sycophantic agreement token.</p>
+        <pre class="rx"><code>/\byou(?:'re| are) (?:absolutely |completely |quite )?right\b|\bgreat point\b|\bthat(?:'s| is) a (?:great|excellent|fair) point\b/gi</code></pre>
+        <ul class="ex"><li><span>You're absolutely right to point that out.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">meta_offer_feedback</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bhappy to (?:address|answer|clarify|expand on) any (?:further|additional|other)\b|\bI(?:'m| am) open to (?:any |further )?(?:suggestions|feedback|guidance|input)\b|\bI would (?:greatly )?appreciate (?:your )?(?:guidance|feedback|input)\b/gi</code></pre>
+        <ul class="ex"><li><span>Happy to address any further concerns.</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-emoji_formatting" data-sev="high">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-high">high</span>
+          <h3>Emoji as structure</h3>
+          <code class="cat-id">emoji_formatting</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0</dd></div>
+          <div><dt>human /1k</dt><dd>0</dd></div>
+          <div><dt>lift</dt><dd>chat-register only</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Decorating headings and bullets with a leading pictograph. Rare in edited prose in any genre outside social posts and release notes.</p>
+      <p class="caution"><strong>False positives.</strong> Changelogs, README files, Slack messages, and consumer newsletters use emoji headings by convention. Genre-dependent.</p>
+      <details class="pats">
+        <summary>4 patterns · 12 pts each, capped at 36</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">emoji_heading</code>
+          
+          
+        </div>
+        <p class="pat-note">Markdown heading opening with an emoji.</p>
+        <pre class="rx"><code>/^\s*#{1,6}\s*\p{Extended_Pictographic}/gmu</code></pre>
+        <ul class="ex"><li><span>## 🚀 Getting Started</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">emoji_bullet</code>
+          
+          
+        </div>
+        <p class="pat-note">List item opening with an emoji.</p>
+        <pre class="rx"><code>/^\s*(?:[-*+]|\d+\.)\s+\p{Extended_Pictographic}/gmu</code></pre>
+        <ul class="ex"><li><span>- ✅ Ship the feature</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">emoji_label_line</code>
+          
+          
+        </div>
+        <p class="pat-note">Emoji-led pseudo-heading followed by a colon.</p>
+        <pre class="rx"><code>/^\s*\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*\s*\*{0,2}[A-Z][^\n]{0,60}:/gmu</code></pre>
+        <ul class="ex"><li><span>🧠 Cognitive Dissonance Pattern:</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">checkmark_cross_pairs</code>
+          
+          
+        </div>
+        <p class="pat-note">The specific decorative set LLMs favour. Density signal.</p>
+        <pre class="rx"><code>/(?:✅|✔️|❌|⚠️|🔑|💡|🚀|📌|🎯|🔥|✨)/gu</code></pre>
+        <ul class="ex"><li><span>✅ Pros / ❌ Cons</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-significance_statements" data-sev="medium">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-medium">medium</span>
+          <h3>Significance and legacy inflation</h3>
+          <code class="cat-id">significance_statements</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0.23</dd></div>
+          <div><dt>human /1k</dt><dd>0.03</dd></div>
+          <div><dt>lift</dt><dd>7.7×</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Rather than state a fact and stop, the model appends a claim about why the fact matters. This is the single most characteristic move in LLM encyclopedic prose, and the hardest for the model to suppress.</p>
+      <p class="caution"><strong>False positives.</strong> Obituaries, award citations, and advocacy writing make these claims sincerely. Density matters more than any single instance.</p>
+      <details class="pats">
+        <summary>8 patterns · 7 pts each, capped at 45</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">stands_as_testament</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:stands?|serves?|remains?) as an? (?:enduring |lasting |powerful |living |stark )?(?:testament|testimony|reminder|symbol|beacon|hallmark|cornerstone|monument|celebration)\b/gi</code></pre>
+        <ul class="ex"><li><span>The bridge stands as a testament to Victorian engineering.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">vital_role</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:plays?|played|playing|has played) an? (?:vital|crucial|pivotal|significant|central|key|critical|important|instrumental|major) role\b/gi</code></pre>
+        <ul class="ex"><li><span>She played a pivotal role in the negotiations.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">underscores_importance</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:underscore[sd]?|highlight(?:s|ed)?|emphasi[sz]e[sd]?|reflect(?:s|ed)?|demonstrate[sd]?|illustrate[sd]?) (?:the |its |their |his |her )?(?:importance|significance|centrality|enduring|lasting|ongoing|continued|broader|vital)\b/gi</code></pre>
+        <ul class="ex"><li><span>This underscores the importance of early testing.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">enduring_legacy</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:enduring|lasting|indelible|profound|far-reaching|ongoing) (?:legacy|impact|influence|mark|imprint|significance|relevance|contribution)\b/gi</code></pre>
+        <ul class="ex"><li><span>He left an indelible mark on the discipline.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">turning_point</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:key |major |critical |defining )?turning point\b|\bwatershed moment\b|\bmark(?:s|ed|ing)? a (?:shift|departure|new (?:chapter|era)|milestone)\b|\bsetting the stage for\b/gi</code></pre>
+        <ul class="ex"><li><span>1968 marked a turning point for the movement.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">evolving_landscape</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:ever-)?(?:evolving|changing|shifting|dynamic) (?:landscape|world|environment|ecosystem|terrain)\b|\bin (?:today's|the modern) (?:fast-paced|rapidly changing|digital) (?:world|landscape|environment)\b/gi</code></pre>
+        <ul class="ex"><li><span>In the ever-evolving landscape of cybersecurity...</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">deeply_rooted</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bdeeply (?:rooted|embedded|ingrained|intertwined)\b|\breflects? (?:a )?broader (?:trends?|shifts?|patterns?|movements?)\b|\bfocal point\b/gi</code></pre>
+        <ul class="ex"><li><span>The practice is deeply rooted in local tradition.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">contributing_to</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bcontribut(?:es?|ed|ing) to (?:the )?(?:rich |broader |ongoing |overall )?(?:tapestry|fabric|mosaic|development|discourse|understanding|conversation|dialogue)\b/gi</code></pre>
+        <ul class="ex"><li><span>...contributing to the rich tapestry of city life.</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-participial_tackon" data-sev="medium">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-medium">medium</span>
+          <h3>Trailing participial commentary</h3>
+          <code class="cat-id">participial_tackon</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0.35</dd></div>
+          <div><dt>human /1k</dt><dd>0</dd></div>
+          <div><dt>lift</dt><dd>∞ (zero human hits)</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> A comma followed by an "-ing" clause that adds evaluation rather than information. The model uses it to make a bare fact feel analysed.</p>
+      <p class="caution"><strong>False positives.</strong> Perfectly grammatical and sometimes genuinely informative. The tell is that the clause could be deleted with zero loss of meaning.</p>
+      <details class="pats">
+        <summary>3 patterns · 8 pts each, capped at 40</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">ing_significance_clause</code>
+          
+          
+        </div>
+        <p class="pat-note">The core construction.</p>
+        <pre class="rx"><code>/,\s+(?:highlighting|emphasi[sz]ing|underscoring|showcasing|reflecting|demonstrating|illustrating|signalling|signaling|cementing|solidifying|reinforcing|affirming|confirming|marking|symbolizing|symbolising|embodying|fostering|cultivating|ensuring|encompassing)\s+(?:its|their|his|her|the|a|an)\b/gi</code></pre>
+        <ul class="ex"><li><span>, highlighting its cultural significance.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">creating_a_space</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bcreating a (?:space|sense|environment|community|platform|foundation) (?:where|for|of)\b|\bfostering a (?:sense|culture|spirit|climate) of\b/gi</code></pre>
+        <ul class="ex"><li><span>...fostering a sense of community.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">ongoing_relevance</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:demonstrating|confirming|illustrating|reflecting|affirming)\s+(?:the\s+)?(?:ongoing|enduring|lasting|continued|persistent)\s+(?:relevance|influence|importance|appeal|significance)\b/gi</code></pre>
+        <ul class="ex"><li><span>...confirming the enduring relevance of the form.</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-negative_parallelism" data-sev="medium">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-medium">medium</span>
+          <h3>Negative parallelism</h3>
+          <code class="cat-id">negative_parallelism</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0.15</dd></div>
+          <div><dt>human /1k</dt><dd>0</dd></div>
+          <div><dt>lift</dt><dd>∞ (zero human hits)</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Defining something by first denying a lesser description. Documented as a stereotypical AI construction by the Washington Post, The Economist, and Russell et al. (ACL 2025).</p>
+      <p class="caution"><strong>False positives.</strong> A real rhetorical device with a long human pedigree. Speechwriting and myth-busting listicles use it deliberately. Repetition is the tell.</p>
+      <details class="pats">
+        <summary>6 patterns · 10 pts each, capped at 45</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">not_only_but_also</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bnot only\b[^.!?\n]{1,80}?\bbut(?: also)?\b/gi</code></pre>
+        <ul class="ex"><li><span>Not only did it fail, but it also cost millions.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">not_just_its</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bnot (?:just|merely|simply)\b[^.!?\n]{1,80}?[,;—-]\s*(?:it(?:'s| is)|they(?:'re| are)|but)\b/gi</code></pre>
+        <ul class="ex"><li><span>It's not just a phone — it's a platform.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">its_not_its</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bit(?:'s| is)\s+not\s+(?:about\s+)?[^.!?\n]{1,60}?[,;—-]\s*it(?:'s| is)\b/gi</code></pre>
+        <ul class="ex"><li><span>It's not about speed, it's about accuracy.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">no_no_just</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bno\s+\w+(?:\s+\w+)?,\s+no\s+\w+(?:\s+\w+)?,\s+(?:just|only)\b/gi</code></pre>
+        <ul class="ex"><li><span>No hype, no jargon, just results.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">isnt_x_its_y</code>
+          
+          
+        </div>
+        <p class="pat-note">Em-dash-joined variant.</p>
+        <pre class="rx"><code>/\b(?:this|that|it|there)\s+(?:is|was)\s?n(?:'|o)t\s+[^.!?\n]{1,60}?[—-]\s*(?:it(?:'s| is)|that(?:'s| is))\b/gi</code></pre>
+        <ul class="ex"><li><span>This isn't a setback — it's a redirection.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">rather_than_contrast</code>
+          
+          
+        </div>
+        <p class="pat-note">The reversed form; common in Grok output.</p>
+        <pre class="rx"><code>/\b(?:prioriti[sz]ing|choosing|favou?ring|emphasi[sz]ing|seeking)\b[^.!?\n]{1,70}?\brather than\b/gi</code></pre>
+        <ul class="ex"><li><span>...prioritizing consolidation rather than ideological purity.</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-rule_of_three" data-sev="medium">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-medium">medium</span>
+          <h3>Mechanical triads</h3>
+          <code class="cat-id">rule_of_three</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>3.11</dd></div>
+          <div><dt>human /1k</dt><dd>0.71</dd></div>
+          <div><dt>lift</dt><dd>4.4×</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> LLMs reach for three-item lists far more often than the content warrants, especially adjective triads used to pad a thin claim.</p>
+      <p class="caution"><strong>False positives.</strong> Highest false-positive category in this file. Three-item lists are ordinary English. Only meaningful when several appear per paragraph.</p>
+      <details class="pats">
+        <summary>2 patterns · 5 pts each, capped at 25</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">adjective_triad</code>
+          
+          
+        </div>
+        <p class="pat-note">Generic X, Y, and Z triad. Count, do not read individually.</p>
+        <pre class="rx"><code>/\b(\w+ly\s+)?(\w{4,}),\s+(\w{4,}),\s+and\s+(\w{4,})\b/g</code></pre>
+        <ul class="ex"><li><span>clear, concise, and compelling</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">triad_closer</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b\w+,\s+\w+,\s+and\s+\w+\s+(?:alike|together|combined|all at once)\b/gi</code></pre>
+        <ul class="ex"><li><span>critics, fans, and scholars alike</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-ritual_conclusion" data-sev="medium">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-medium">medium</span>
+          <h3>Ritual conclusions</h3>
+          <code class="cat-id">ritual_conclusion</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0.12</dd></div>
+          <div><dt>human /1k</dt><dd>0.03</dd></div>
+          <div><dt>lift</dt><dd>4.0×</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Chat answers are trained to close with a wrap-up. Transplanted into an article, the summary restates what the reader just read.</p>
+      <p class="caution"><strong>False positives.</strong> Academic papers and reports have legitimate conclusion sections. The tell is a summary paragraph closing every section, not just the piece.</p>
+      <details class="pats">
+        <summary>3 patterns · 9 pts each, capped at 30</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">in_conclusion</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/(?:^|\n|[.!?]\s+)\s*(?:In (?:conclusion|summary|essence|short)|Ultimately|Overall|To sum up|All in all|In the end),/g</code></pre>
+        <ul class="ex"><li><span>In conclusion, the evidence is mixed.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">conclusion_heading</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/^\s*#{1,6}\s*(?:Conclusion|Summary|Final [Tt]houghts|Key [Tt]akeaways?|Wrapping [Uu]p|The [Bb]ottom [Ll]ine|Future [Oo]utlook|Looking [Aa]head)\s*:?\s*$/gm</code></pre>
+        <ul class="ex"><li><span>## Key Takeaways</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">bottom_line</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bthe bottom line (?:is|here is)\b|\bat the end of the day,/gi</code></pre>
+        <ul class="ex"><li><span>The bottom line is that costs rose.</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-challenges_and_future" data-sev="medium">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-medium">medium</span>
+          <h3>Challenges-and-future formula</h3>
+          <code class="cat-id">challenges_and_future</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0.04</dd></div>
+          <div><dt>human /1k</dt><dd>0</dd></div>
+          <div><dt>lift</dt><dd>∞ (zero human hits)</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> A structural template: concede a difficulty, then reassure. It fills space without adding a single verifiable fact.</p>
+      <p class="caution"><strong>False positives.</strong> Strategy documents and policy briefs are supposed to do this. Judge by whether the challenges are named specifically or gestured at.</p>
+      <details class="pats">
+        <summary>5 patterns · 9 pts each, capped at 30</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">despite_challenges</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bdespite (?:these |its |the |such )?(?:challenges|obstacles|setbacks|difficulties|limitations|criticism)\b/gi</code></pre>
+        <ul class="ex"><li><span>Despite these challenges, the project continues to thrive.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">faces_challenges</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bfaces? (?:several |a number of |numerous |significant |ongoing )?(?:challenges|hurdles|obstacles)(?: that must be addressed)?\b/gi</code></pre>
+        <ul class="ex"><li><span>The sector faces several challenges that must be addressed.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">continues_to</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bcontinue[sd]? to (?:evolve|thrive|grow|shape|serve|inspire|play|provide|resonate|attract)\b/gi</code></pre>
+        <ul class="ex"><li><span>The festival continues to thrive.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">future_lies_in</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bthe future of\b[^.!?\n]{1,60}?\b(?:lies in|will depend on|hinges on|remains (?:bright|uncertain|promising))\b|\bpositions? (?:it|them|itself) (?:well )?for (?:future|continued|further)\b/gi</code></pre>
+        <ul class="ex"><li><span>The future of the format lies in its ability to adapt.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">sparked_conversation</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:sparked|prompted|generated|ignited|raised) (?:broader |wider |important |renewed )?(?:conversations?|debates?|discussions?|reflections?|questions?) (?:about|around|regarding)\b/gi</code></pre>
+        <ul class="ex"><li><span>The ruling sparked broader conversations about privacy.</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-vague_attribution" data-sev="medium">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-medium">medium</span>
+          <h3>Vague attribution</h3>
+          <code class="cat-id">vague_attribution</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0.15</dd></div>
+          <div><dt>human /1k</dt><dd>0.06</dd></div>
+          <div><dt>lift</dt><dd>2.5×</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Consensus asserted without a nameable source. The model cannot cite what it does not have, so it invokes an anonymous collective.</p>
+      <p class="caution"><strong>False positives.</strong> Journalism uses "experts say" under real deadline constraints. The question to ask is whether a name appears anywhere nearby.</p>
+      <details class="pats">
+        <summary>5 patterns · 8 pts each, capped at 35</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">experts_say</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:experts|analysts|observers|critics|commentators|scholars|researchers|historians|industry (?:experts|analysts|watchers))\s+(?:say|said|argue|argued|note|noted|believe|suggest|contend|have (?:noted|argued|suggested|cited|observed))\b/gi</code></pre>
+        <ul class="ex"><li><span>Experts argue that the trend will continue.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">studies_have_shown</code>
+          
+          
+        </div>
+        <p class="pat-note">Only fires when no year appears in the same sentence.</p>
+        <pre class="rx"><code>/\b(?:studies|research|reports|surveys|data)\s+(?:have |has )?(?:shown|suggest(?:ed)?|indicate[sd]?|reveal(?:ed)?|found)\b(?![^.!?\n]{0,60}\b(?:19|20)\d{2}\b)/gi</code></pre>
+        <ul class="ex"><li><span>Studies have shown a link between the two.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">several_sources</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:several|multiple|various|numerous|a number of)\s+(?:sources|publications|outlets|commentators|accounts)\b/gi</code></pre>
+        <ul class="ex"><li><span>Several sources suggest otherwise.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">widely_regarded</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:widely|generally|commonly|often)\s+(?:regarded|considered|recognised|recognized|acknowledged|seen|viewed|described|praised|hailed)\s+as\b/gi</code></pre>
+        <ul class="ex"><li><span>Widely regarded as a masterpiece.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">media_presence</code>
+          
+          
+        </div>
+        <p class="pat-note">Notability puffery.</p>
+        <pre class="rx"><code>/\bmaintains? an? (?:active|strong|significant|growing) (?:social media|digital|online|public) presence\b|\b(?:featured|profiled|covered) in (?:local|regional|national|international) (?:media )?outlets\b/gi</code></pre>
+        <ul class="ex"><li><span>She maintains an active social media presence.</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-editorial_hedging" data-sev="medium">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-medium">medium</span>
+          <h3>Editorialising hedges</h3>
+          <code class="cat-id">editorial_hedging</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0</dd></div>
+          <div><dt>human /1k</dt><dd>0</dd></div>
+          <div><dt>lift</dt><dd>not exercised</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Instructing the reader how to weigh a fact instead of presenting it. Safety training rewards this register heavily.</p>
+      <p class="caution"><strong>False positives.</strong> Common in genuine explanatory and pedagogical writing.</p>
+      <details class="pats">
+        <summary>4 patterns · 6 pts each, capped at 30</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">important_to_note</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bit(?:'s| is) (?:important|crucial|essential|vital|worth|useful|helpful|necessary) to (?:note|remember|consider|recognise|recognize|understand|emphasi[sz]e|highlight|acknowledge|point out|keep in mind)\b/gi</code></pre>
+        <ul class="ex"><li><span>It's important to note that results vary.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">worth_noting</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:it is |it's )?worth (?:noting|mentioning|considering|remembering) that\b|\bnotably,|\bimportantly,/gi</code></pre>
+        <ul class="ex"><li><span>Worth noting that the sample was small.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">may_vary</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bmay vary (?:depending|based) on\b|\bresults (?:may|can) vary\b|\byour mileage may vary\b/gi</code></pre>
+        <ul class="ex"><li><span>Costs may vary depending on region.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">both_sides</code>
+          
+          
+        </div>
+        <p class="pat-note">False-balance construction.</p>
+        <pre class="rx"><code>/\bwhile\b[^.!?\n]{1,70}?,\s*it(?:'s| is) (?:also )?(?:important|worth|crucial|essential)\b/gi</code></pre>
+        <ul class="ex"><li><span>While the data is promising, it's important to remain cautious.</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-promotional_puffery" data-sev="medium">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-medium">medium</span>
+          <h3>Promotional puffery</h3>
+          <code class="cat-id">promotional_puffery</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0.27</dd></div>
+          <div><dt>human /1k</dt><dd>0.2</dd></div>
+          <div><dt>lift</dt><dd>1.4×</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Travel-brochure register. The model reaches for evaluative adjectives when it lacks specific facts about a place, person, or product.</p>
+      <p class="caution"><strong>False positives.</strong> Marketing copy is supposed to sound like this. Only a tell in registers that claim neutrality.</p>
+      <details class="pats">
+        <summary>5 patterns · 6 pts each, capped at 35</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">nestled_in_heart</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bnestled (?:in|among|between|within)\b|\bin the heart of\b|\b(?:serves?|acts?) as (?:the |a )?gateway\b|\bhidden gem\b/gi</code></pre>
+        <ul class="ex"><li><span>Nestled in the heart of the old town...</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">breathtaking_adjectives</code>
+          
+          
+        </div>
+        <p class="pat-note">Count as density, not as individual hits.</p>
+        <pre class="rx"><code>/\b(?:breathtaking|stunning|captivating|mesmeri[sz]ing|awe-inspiring|picturesque|idyllic|charming|quaint|bustling|vibrant|thriving|renowned|acclaimed|groundbreaking|revolutionary|cutting-edge|state-of-the-art|world-class|unparalleled|unrivalled|unrivaled)\b/gi</code></pre>
+        <ul class="ex"><li><span>a breathtaking view of the valley</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">rich_tapestry</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:rich|vibrant|diverse|colou?rful|intricate) (?:tapestry|mosaic|blend|array|heritage|history|culture|tradition)\b/gi</code></pre>
+        <ul class="ex"><li><span>a rich tapestry of influences</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">commitment_to</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:unwavering|steadfast|deep|strong|ongoing) commitment to\b|\bdedication to (?:excellence|quality|innovation|sustainability)\b/gi</code></pre>
+        <ul class="ex"><li><span>their unwavering commitment to quality</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">boasts</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bboasts (?:a|an|the|over|more than|some)\b/gi</code></pre>
+        <ul class="ex"><li><span>The campus boasts a modern library.</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-formatting_tells" data-sev="medium">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-medium">medium</span>
+          <h3>Structural formatting tells</h3>
+          <code class="cat-id">formatting_tells</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>1.15</dd></div>
+          <div><dt>human /1k</dt><dd>0</dd></div>
+          <div><dt>lift</dt><dd>∞ (zero human hits)</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Markdown habits from the chat interface surviving into a document: bolded label lists, title-case headings, gratuitous horizontal rules.</p>
+      <p class="caution"><strong>False positives.</strong> These are legitimate formatting choices. They only become evidence when they appear in a venue whose house style forbids them.</p>
+      <details class="pats">
+        <summary>5 patterns · 6 pts each, capped at 30</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">inline_header_list</code>
+          
+          
+        </div>
+        <p class="pat-note">Bullet + bold label + colon. The single most recognisable LLM list shape.</p>
+        <pre class="rx"><code>/^\s*(?:[-*+]|\d+\.)\s+\*\*[^*\n]{2,60}\*\*\s*[:—-]/gm</code></pre>
+        <ul class="ex"><li><span>- **Scalability**: handles growth gracefully</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">title_case_heading</code>
+          
+          
+        </div>
+        <p class="pat-note">Every Word Capitalised In A Heading.</p>
+        <pre class="rx"><code>/^\s*#{2,6}\s+(?:[A-Z][a-z']+\s+){2,}[A-Z][a-z']+\s*$/gm</code></pre>
+        <ul class="ex"><li><span>### Early Career And Professional Development</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">thematic_break_spam</code>
+          
+          
+        </div>
+        <p class="pat-note">Horizontal rules between every section. Density signal.</p>
+        <pre class="rx"><code>/^\s*(?:---|\*\*\*|___)\s*$/gm</code></pre>
+        <ul class="ex"><li><span>---</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">bold_lead_in</code>
+          
+          
+        </div>
+        <p class="pat-note">A bolded line standing in for a real heading.</p>
+        <pre class="rx"><code>/^\s*\*\*[^*\n]{2,60}\*\*\s*$/gm</code></pre>
+        <ul class="ex"><li><span>**Key considerations**</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">heading_then_heading</code>
+          
+          
+        </div>
+        <p class="pat-note">A heading whose only child is another heading.</p>
+        <pre class="rx"><code>/^\s*#{1,3}\s+[^\n]{1,60}\n+\s*#{2,4}\s+/gm</code></pre>
+        <ul class="ex"><li><span># Overview
+## Background</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-copula_avoidance" data-sev="low">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-low">low</span>
+          <h3>Copula avoidance</h3>
+          <code class="cat-id">copula_avoidance</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0.73</dd></div>
+          <div><dt>human /1k</dt><dd>0.46</dd></div>
+          <div><dt>lift</dt><dd>1.6×</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> LLMs substitute elaborate verbs for "is", "are", and "has". Geng &amp; Trotta measured a &gt;10% drop in "is"/"are" in academic writing in 2023.</p>
+      <p class="caution"><strong>False positives.</strong> Each of these verbs has honest uses. This is a density signal only.</p>
+      <details class="pats">
+        <summary>3 patterns · 3 pts each, capped at 24</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">serves_as</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:serves?|served|stands?|stood|functions?|operates?|acts?|emerges?|positions? itself) as (?:a|an|the|one of)\b/gi</code></pre>
+        <ul class="ex"><li><span>The hall serves as a community centre.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">represents_a</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\brepresents? (?:a|an|one of|the)\b|\bmarks? (?:a|an|the) (?:first|beginning|start|shift|milestone)\b/gi</code></pre>
+        <ul class="ex"><li><span>The move represents a significant change.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">features_offers</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:features?|offers?|houses?|showcases?|encompasses|comprises|holds the distinction of being)\s+(?:a|an|the|over|more than|several|numerous)\b/gi</code></pre>
+        <ul class="ex"><li><span>The building features a glass atrium.</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-ai_vocabulary" data-sev="low">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-low">low</span>
+          <h3>Overrepresented vocabulary</h3>
+          <code class="cat-id">ai_vocabulary</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>2.15</dd></div>
+          <div><dt>human /1k</dt><dd>0.31</dd></div>
+          <div><dt>lift</dt><dd>6.9×</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Words whose post-2022 frequency jumped measurably. Kobak et al. (2025) found "delves" at 28x its extrapolated 2024 frequency in PubMed abstracts; Juzek &amp; Ward report even larger ratios for "delving" and "showcasing" in scientific abstracts.</p>
+      <p class="caution"><strong>False positives.</strong> Every one of these is an ordinary English word. A single use means nothing whatsoever. Clustering is the only meaningful signal, and this category is the primary driver of bias against non-native English writers, who tend toward formal register. Weight accordingly.</p>
+      <details class="pats">
+        <summary>4 patterns · 2 pts each, capped at 30</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">era_gpt4</code>
+          
+          <span class="vendor era">2023 to mid-2024</span>
+        </div>
+        <p class="pat-note">Peak-GPT-4 register.</p>
+        <pre class="rx"><code>/\b(?:delv(?:e|es|ed|ing)|tapestr(?:y|ies)|testament|pivotal|meticulous(?:ly)?|intricac(?:y|ies)|intricate|underscor(?:e|es|ed|ing)|bolster(?:ed|ing)?|garner(?:ed|ing)?|interplay|multifaceted|nuanced)\b/gi</code></pre>
+        <ul class="ex"><li><span>delve into the intricacies</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">era_gpt4o</code>
+          
+          <span class="vendor era">mid-2024 to mid-2025</span>
+        </div>
+        
+        <pre class="rx"><code>/\b(?:showcas(?:e|es|ed|ing)|foster(?:s|ed|ing)?|align(?:s|ed|ing)? with|enhanc(?:e|es|ed|ing)|enduring|crucial|vibrant|holistic|seamless(?:ly)?|robust|comprehensive|leverage[sd]?|realm|landscape)\b/gi</code></pre>
+        <ul class="ex"><li><span>a seamless and robust solution</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">era_current</code>
+          
+          <span class="vendor era">mid-2025 onward</span>
+        </div>
+        
+        <pre class="rx"><code>/\b(?:emphasi[sz]ing|highlighting|showcasing|deep dive|actionable|streamlin(?:e|es|ed|ing)|empower(?:s|ed|ing)?|unlock(?:s|ed|ing)? the (?:potential|power)|game[- ]chang(?:er|ing)|paradigm shift)\b/gi</code></pre>
+        <ul class="ex"><li><span>unlock the potential of your data</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">sentence_initial_additionally</code>
+          
+          
+        </div>
+        <p class="pat-note">Sentence-initial connective. Human writers vary these more.</p>
+        <pre class="rx"><code>/(?:^|\n)\s*(?:Additionally|Moreover|Furthermore|Notably|Consequently|Nevertheless|Nonetheless),/gm</code></pre>
+        <ul class="ex"><li><span>Additionally, the cost fell.</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-business_jargon" data-sev="low">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-low">low</span>
+          <h3>Consulting jargon</h3>
+          <code class="cat-id">business_jargon</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0.08</dd></div>
+          <div><dt>human /1k</dt><dd>0</dd></div>
+          <div><dt>lift</dt><dd>∞ (zero human hits)</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Corporate register the model defaults to for any business-adjacent prompt, regardless of whether the subject is commercial.</p>
+      <p class="caution"><strong>False positives.</strong> A real dialect spoken by real people in real meetings. Only a tell outside its native habitat.</p>
+      <details class="pats">
+        <summary>3 patterns · 3 pts each, capped at 24</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">synergy_family</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:synerg(?:y|ies|istic)|actionable insights?|value[- ]add(?:ed)?|best[- ]in[- ]class|mission[- ]critical|core competenc(?:y|ies)|low[- ]hanging fruit|move the needle|circle back|touch base|boil the ocean|north star metric)\b/gi</code></pre>
+        <ul class="ex"><li><span>actionable insights that move the needle</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">stakeholder_speak</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:key stakeholders?|cross[- ]functional|end[- ]to[- ]end|scalable solutions?|drive (?:growth|value|impact|adoption)|operationali[sz]e|ideate|bandwidth for)\b/gi</code></pre>
+        <ul class="ex"><li><span>align key stakeholders end-to-end</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">transformation_speak</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:digital transformation|thought leader(?:ship)?|disrupt(?:ive|ion)? (?:innovation|technolog)|next[- ]generation|future[- ]proof|holistic approach|strategic imperative)\b/gi</code></pre>
+        <ul class="ex"><li><span>a holistic approach to digital transformation</span></li></ul>
+      </div>
+      </details>
+    </article>
+
+    <article class="cat" id="cat-data_analysis_phrases" data-sev="low">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-low">low</span>
+          <h3>Analysis-report register</h3>
+          <code class="cat-id">data_analysis_phrases</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>0</dd></div>
+          <div><dt>human /1k</dt><dd>0</dd></div>
+          <div><dt>lift</dt><dd>not exercised</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Formulaic framing the model wraps around numbers, often when the numbers themselves are thin or unsourced.</p>
+      <p class="caution"><strong>False positives.</strong> Standard in analyst reports and data journalism.</p>
+      <details class="pats">
+        <summary>4 patterns · 4 pts each, capped at 24</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">data_reveals</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\bthe (?:data|numbers|figures|results|findings|evidence|analysis) (?:reveals?|shows?|suggests?|tells? (?:a|us)|paints? a (?:picture|clear picture)|speaks? for itself)\b/gi</code></pre>
+        <ul class="ex"><li><span>The data paints a clear picture.</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">at_a_glance</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:at a glance|key (?:takeaways?|findings?|highlights?|metrics|insights?)|by the numbers|tl;?dr)\b/gi</code></pre>
+        <ul class="ex"><li><span>Key takeaways at a glance</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">deep_dive_analysis</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:let(?:'s| us) )?(?:take a )?(?:deep dive|closer look) (?:into|at)\b|\bdiving deeper\b|\bunpack(?:ing)? the (?:data|numbers|findings)\b/gi</code></pre>
+        <ul class="ex"><li><span>A deep dive into the quarterly figures</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">suggests_trend</code>
+          
+          
+        </div>
+        
+        <pre class="rx"><code>/\b(?:indicat(?:es?|ing)|suggest(?:s|ing)?|point(?:s|ing)? to) a (?:growing|clear|strong|significant|notable|marked|worrying|promising) (?:trend|shift|correlation|pattern|increase|decline)\b/gi</code></pre>
+        <ul class="ex"><li><span>This points to a growing trend.</span></li></ul>
+      </div>
+      </details>
+    </article></div>
+  </div>
+</section>
+
+<section id="validation">
+  <div class="wrap narrow">
+    <div class="sec-label">03 — Validation</div>
+    <h2 class="big">What it actually catches</h2>
+    <p class="lede">Claims about detection are cheap. These are measured numbers from a run you can reproduce with the code below.</p>
+
+    <p>Three corpora. The <strong>AI article</strong> set is 29 documented LLM outputs that Wikipedia editors archived as evidence when cleaning up machine-written drafts — real chatbot text that a real person pasted into a real encyclopedia. The <strong>AI chat</strong> set is 6 shorter samples in conversational register, from the same archive. The <strong>human control</strong> is 16 Wikipedia articles as they stood in December 2017, more than four years before ChatGPT shipped: same genre, same encyclopedic register, guaranteed pre-LLM.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <caption>Score distribution</caption>
+        <thead><tr><th>Corpus</th><th class="num">n</th><th class="num">words</th><th class="num">mean</th><th class="num">median</th><th class="num">min</th><th class="num">max</th></tr></thead>
+        <tbody>
+          <tr><td>AI, article register</td><td class="num">29</td><td class="num">26,863</td><td class="num pos">34.0</td><td class="num">31</td><td class="num">3</td><td class="num">87</td></tr>
+          <tr><td>AI, chat register</td><td class="num">6</td><td class="num">778</td><td class="num pos">55.5</td><td class="num">62</td><td class="num">29</td><td class="num">66</td></tr>
+          <tr><td>Human, Wikipedia Dec 2017</td><td class="num">16</td><td class="num">35,502</td><td class="num neg">9.9</td><td class="num">9</td><td class="num">4</td><td class="num">20</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The separation is real but the overlap matters more than the gap. No human document scored above 20. The lowest-scoring AI document scored 3.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <caption>Threshold sweep — AI article corpus vs human control</caption>
+        <thead><tr><th class="num">Threshold</th><th class="num">Recall</th><th class="num">False positives</th><th class="num">Precision</th></tr></thead>
+        <tbody>
+          <tr><td class="num">15</td><td class="num">83%</td><td class="num pos">25%</td><td class="num">86%</td></tr>
+          <tr><td class="num">25</td><td class="num">66%</td><td class="num neg">0%</td><td class="num">100%</td></tr>
+          <tr><td class="num">35</td><td class="num">38%</td><td class="num neg">0%</td><td class="num">100%</td></tr>
+          <tr><td class="num">45</td><td class="num">21%</td><td class="num neg">0%</td><td class="num">100%</td></tr>
+          <tr><td class="num">65</td><td class="num">17%</td><td class="num neg">0%</td><td class="num">100%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <p><strong>Read that table honestly.</strong> A threshold clean enough to produce zero false positives on 16 human documents still misses a third of known machine text. Push recall to 83% and one human article in four gets flagged. There is no setting that is both safe and thorough, and this is on a tiny, favourable, single-genre corpus.</p>
+    </div>
+
+    <h3 class="sub">The signal that did not survive contact with data</h3>
+    <p>"Burstiness" — the idea that humans vary sentence length far more than machines — is the most widely repeated heuristic in this space and a documented input to commercial detectors. On this corpus it does nothing. Mean coefficient of variation in sentence length came out at <strong>0.546 for the AI text and 0.606 for the human text</strong>: a difference in the predicted direction, far too small to separate anything, and swamped by genre. Encyclopedic prose is uniform whoever writes it.</p>
+    <p>The em dash, by contrast, held up: <strong>2.65 per thousand words versus 0.26</strong>. So did the machine artifacts, at infinite lift — they appear in 17% of the AI documents and zero human ones, which is what you would expect of a signal that is not about writing at all.</p>
+
+    <h3 class="sub">The noisiest category, and why it stays in</h3>
+    <p>Three-item lists fire in <strong>94% of the human documents</strong> and 83% of the AI ones. Measured by document presence the category is worse than useless. Measured by density it still carries a 4.4× lift, because the AI text stacks triads at 3.11 per thousand words against 0.71. It is kept, weighted low, capped hard, and labelled as the highest false-positive family in the file. That is the honest treatment of a weak signal: keep it visible, never let it drive a verdict.</p>
+
+    <h3 class="sub">What the corpus could not test</h3>
+    <p>Three categories — model self-identification, editorialising hedges, and analysis-report register — recorded zero hits in <em>both</em> corpora. They are not broken; their unit examples all pass. They are simply absent from Wikipedia-register text, because nobody leaves "As an AI language model" in an encyclopedia draft they are trying to get past reviewers, and encyclopedias do not say "the data paints a clear picture". Those three rest on documented examples alone, and are marked as such rather than quietly presented as validated.</p>
+  </div>
+</section>
+
+<section id="limits">
+  <div class="wrap narrow">
+    <div class="sec-label">04 — Limits</div>
+    <h2 class="big">Why detection keeps failing</h2>
+
+    <p>The industry's own numbers are the strongest argument against trusting any of this as evidence. OpenAI shipped an AI Text Classifier in January 2023 and withdrew it that July, citing low accuracy; its published figures were a <strong>26% true-positive rate at a 9% false-positive rate</strong> — a tool that missed three-quarters of machine text while wrongly accusing nearly one human document in eleven. Turnitin, which is still deployed at scale in education, states under 1% false positives at the document level but roughly <strong>4% at the sentence level</strong>. Weber-Wulff and colleagues tested fourteen tools in 2023 and concluded they were "neither accurate nor reliable", with detection degrading sharply on paraphrased, human-edited, or translated text.</p>
+
+    <p>Then there is the bias, which is not a bug to be patched. Liang's TOEFL study found that running the human-written essays through ChatGPT to "enhance word choices to sound more like a native speaker" dropped their false-positive rate from 61.22% to <strong>11.77%</strong>. Running the reverse experiment — simplifying American students' essays to sound non-native — pushed their false-positive rate from 5.19% to <strong>56.65%</strong>. The detectors were not finding machines. They were finding low-perplexity prose, which is what you write when you are working carefully in your second language.</p>
+
+    <p>Every category in this file inherits that flaw, and the vocabulary category is where it bites hardest. Formal register, restricted synonym range, careful connectives: this is what good non-native academic English looks like, and it is also what the model does.</p>
+
+    <h3 class="sub">The target moves</h3>
+    <p>Wikipedia's editors track which words cluster in which model era. Their breakdown: <em>delve, tapestry, testament, pivotal, meticulous, intricate</em> for GPT-4 through mid-2024; <em>align with, showcase, foster, enhance, vibrant</em> for the GPT-4o period; <em>emphasising, highlighting, showcasing</em> from mid-2025. <em>Delve</em> itself, the most famous tell of all, dropped off sharply during 2025. The library tags patterns by era for this reason. Any wordlist of this kind is a photograph of a particular season of model releases, and it starts decaying the day it is written.</p>
+
+    <p>It also decays because it is adversarial. Once a tell becomes notorious, it gets tuned out — as happened to the em dash in GPT-5.1. The signals that survive are the ones nobody is optimising against, which is precisely why the vendor citation artifacts are the most durable category here and the vocabulary list is the least.</p>
+
+    <div class="callout">
+      <p><strong>What this is good for.</strong> Linting your own drafts before you publish. Reviewing a pull request against a house style guide. Feeding the pattern list to a model as instructions for what not to write. Getting a fast second opinion on prose that feels off, before you reread it properly yourself.</p>
+      <p><strong>What it is not good for.</strong> Grading students. Screening job applicants. Moderation decisions. Anything where a person bears a cost for being wrongly flagged.</p>
+    </div>
+  </div>
+</section>
+
+<section id="tool">
+  <div class="wrap narrow">
+    <div class="sec-label">05 — The tool</div>
+    <h2 class="big">SlopDetector</h2>
+    <p class="lede">Everything above, as something you can actually use. Paste prose and every
+    match is highlighted in place; click one to see which rule fired, why models produce it,
+    and how it earns false positives.</p>
+
+    <p>It runs entirely in your browser — no upload, no logging, verifiable in view-source.
+    The engine is not a reimplementation: the page is generated by a build step that inlines the
+    same two modules the command-line linter and the HTTP API import, so all three surfaces
+    return identical findings for identical input. That equivalence is asserted by a test, which
+    is how a real discrepancy surfaced: one rule shipped disabled in the CLI and enabled in the
+    API, because the default lived in the wrong file.</p>
+
+    <p style="margin-top:32px">
+      <a href="https://pub.hyperagent.com/p/QEeeAx22m4-oPVFXSGkfwe5hQvB02Q7DHVEBma1svHQ" target="_blank" rel="noopener noreferrer"
+         style="display:inline-block;background:var(--ink);color:#fff;text-decoration:none;
+                padding:15px 30px;border-radius:3px;font-weight:600;font-size:1.03rem;
+                letter-spacing:-.01em">Open SlopDetector →</a>
+    </p>
+
+    <h3 class="sub">Or run it yourself</h3>
+    <p>The catalogue ships as a zero-dependency npm package with a CLI, an ESLint-style config,
+    a pre-commit hook, and an HTTP API you can deploy to Cloudflare Workers or run locally.</p>
+    <div class="tbl-wrap">
+      <table>
+        <caption>Three surfaces, one engine</caption>
+        <thead><tr><th>Surface</th><th>Command</th><th>For</th></tr></thead>
+        <tbody>
+          <tr><td>Browser</td><td><code>SlopDetector</code></td><td>Reading a draft, exploring the rules</td></tr>
+          <tr><td>CLI</td><td><code>npx slop "docs/**/*.md"</code></td><td>Pre-commit hooks, CI gates, editors</td></tr>
+          <tr><td>API</td><td><code>npx -p ai-text-patterns slop-serve</code></td><td>Other apps, pipelines, deployment</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The CLI exits <code>0</code> clean, <code>1</code> on a lint failure and <code>2</code> on a
+    config error, so a broken config never masquerades as a prose problem. Critical-tier rules —
+    the vendor citation artifacts — are the only ones worth gating a build on.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <h4>Sources</h4>
+        <ol>
+          <li><a href="https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing" target="_blank" rel="noopener noreferrer">Wikipedia:Signs of AI writing</a>, WikiProject AI Cleanup. The most complete public catalogue, continuously updated.</li>
+          <li>Kobak, González-Márquez, Horvát &amp; Lause. <a href="https://www.science.org/doi/10.1126/sciadv.adt3813" target="_blank" rel="noopener noreferrer">Delving into LLM-assisted writing in biomedical publications through excess vocabulary</a>. <em>Science Advances</em> 11(27), 2025.</li>
+          <li>Juzek &amp; Ward. <a href="https://arxiv.org/abs/2412.11385" target="_blank" rel="noopener noreferrer">Why Does ChatGPT "Delve" So Much?</a> Findings of ACL, 2025.</li>
+          <li>Liang, Yüksekgönül, Mao, Wu &amp; Zou. <a href="https://www.cell.com/patterns/fulltext/S2666-3899(23)00130-7" target="_blank" rel="noopener noreferrer">GPT detectors are biased against non-native English writers</a>. <em>Patterns</em> 4(7), 2023.</li>
+          <li>Russell, Karpinska &amp; Iyyer. <a href="https://aclanthology.org/2025.acl-long.267/" target="_blank" rel="noopener noreferrer">People who frequently use ChatGPT for writing tasks are accurate and robust detectors of AI-generated text</a>. ACL, 2025.</li>
+          <li>Weber-Wulff et al. <a href="https://arxiv.org/abs/2306.15666" target="_blank" rel="noopener noreferrer">Testing of Detection Tools for AI-Generated Text</a>, 2023.</li>
+          <li>Merrill, Chen &amp; Kumer. <a href="https://www.washingtonpost.com/technology/interactive/2025/how-detect-chatgpt-em-dash/" target="_blank" rel="noopener noreferrer">What are the clues that ChatGPT wrote something?</a> <em>The Washington Post</em>, 13 Nov 2025.</li>
+          <li><a href="https://www.economist.com/culture/2026/07/30/how-to-spot-ai-writing" target="_blank" rel="noopener noreferrer">How to spot AI writing</a>. <em>The Economist</em>, 30 Jul 2026.</li>
+          <li><a href="https://www.turnitin.com/blog/understanding-the-false-positive-rate-for-sentences-of-our-ai-writing-detection-capability" target="_blank" rel="noopener noreferrer">Understanding the false positive rate for sentences</a>. Turnitin, 14 Jun 2023.</li>
+          <li><a href="https://aiwritingguide.misterburton.com" target="_blank" rel="noopener noreferrer">Anti-AI Writing Guide for Robots</a> — a machine-readable rendering of the Wikipedia catalogue, exportable as a system prompt.</li>
+        </ol>
+      </div>
+      <div>
+        <h4>Method</h4>
+        <p style="font-size:13.5px;line-height:1.6">Human control: 16 English Wikipedia articles retrieved at their last revision before 1 January 2018 via the MediaWiki API, wikitext stripped to prose. AI corpora: the 29 archived subpages of <code>Wikipedia:Signs of AI writing/Examples</code> exceeding 250 words, plus 6 chat-register excerpts quoted in the parent page. Scoring counts distinct surface forms per category, weights by severity, caps per category, and normalises toward a 500-word reference length. Code blocks are stripped before matching. Typography metrics run on raw text before Unicode folding.</p>
+      </div>
+      <div>
+        <h4>Reproducing</h4>
+        <p style="font-size:13.5px;line-height:1.6">The bundle contains the <code>ai-text-patterns</code> npm package (library, CLI, four reporters, HTTP API, 64 tests), the SlopDetector page and its build step, plus the research harness: <code>build-corpus.py</code> and <code>build-ai-corpus.py</code> for corpus construction, <code>validate.mjs</code> for the run that produced every number on this page, and <code>validation-report.txt</code> as its raw output.</p>
+      </div>
+    </div>
+    <div class="colophon">
+      Pattern catalogue derived from Wikipedia:Signs of AI writing, used under CC BY-NC-SA 4.0; this page and the library carry the same licence. Measurements were produced on a corpus of 63,143 words and should be read as indicative of that corpus, not as general accuracy claims.
+    </div>
+  </div>
+</footer>
+
+
+</body>
+</html>

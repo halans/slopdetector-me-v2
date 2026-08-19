@@ -1,0 +1,14 @@
+name = "slopdetector-api"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+# Pure computation, no bindings needed. Deploy with:
+#   npx wrangler deploy
+#
+# Local development:
+#   npx wrangler dev
+
+[observability]
+enabled = true
+# NOTE: Worker logs record method, path and status only. Request bodies are
+# never logged — see the privacy note in core.js.

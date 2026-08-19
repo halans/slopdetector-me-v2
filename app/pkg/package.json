@@ -1,0 +1,67 @@
+{
+  "name": "ai-text-patterns",
+  "version": "1.0.0",
+  "description": "Lint prose for the stylistic fingerprints of LLM-generated text. 20 categories, 95 regex patterns, validated against a human control corpus. Zero dependencies.",
+  "keywords": [
+    "ai-detection",
+    "llm",
+    "linter",
+    "prose",
+    "writing",
+    "style",
+    "ai-slop",
+    "markdown",
+    "text-analysis",
+    "regex",
+    "pre-commit",
+    "ci",
+    "api",
+    "cloudflare-worker",
+    "openapi",
+    "slopdetector"
+  ],
+  "license": "CC-BY-NC-SA-4.0",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./patterns": "./src/patterns.js",
+    "./lint": "./src/lint.js",
+    "./config": "./src/config.js",
+    "./reporters/*": "./src/reporters/*.js",
+    "./api": "./api/core.js",
+    "./api/worker": "./api/worker.js",
+    "./api/node": "./api/node.js",
+    "./openapi": "./api/openapi.js"
+  },
+  "bin": {
+    "slop": "./src/cli.js",
+    "ai-text-patterns": "./src/cli.js",
+    "slop-serve": "./api/server.js"
+  },
+  "files": [
+    "src",
+    "api",
+    "README.md",
+    "LICENSE",
+    ".pre-commit-hooks.yaml",
+    ".sloprc.example.json"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "lint:self": "node src/cli.js README.md --verbose",
+    "prepublishOnly": "npm test",
+    "serve": "node api/server.js"
+  },
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/halans/ai-text-patterns.git"
+  },
+  "bugs": {
+    "url": "https://github.com/halans/ai-text-patterns/issues"
+  }
+}

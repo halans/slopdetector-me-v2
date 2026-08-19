@@ -1,0 +1,36 @@
+Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
+
+Copyright (c) 2026 ai-text-patterns contributors
+
+The pattern catalogue in src/patterns.js is derived from
+"Wikipedia:Signs of AI writing" (English Wikipedia, WikiProject AI Cleanup),
+which is published under the Creative Commons Attribution-ShareAlike licence.
+This package therefore inherits a share-alike obligation.
+
+You are free to:
+  Share  — copy and redistribute the material in any medium or format
+  Adapt  — remix, transform, and build upon the material
+
+Under the following terms:
+  Attribution   — You must give appropriate credit, provide a link to the
+                  licence, and indicate if changes were made.
+  NonCommercial — You may not use the material for commercial purposes.
+  ShareAlike    — If you remix, transform, or build upon the material, you must
+                  distribute your contributions under the same licence.
+
+No warranties are given. The licence may not give you all of the permissions
+necessary for your intended use.
+
+Full licence text: https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+
+---
+
+ADDITIONAL NOTICE ON USE
+
+This software reports stylistic signals in text. It is not an authorship
+detector and must not be represented as one. Published false-positive rates for
+AI-detection tools reach 61% on human-written English text by non-native
+speakers (Liang et al., Patterns 4(7), 2023). Do not use this software, or its
+output, as evidence in academic misconduct proceedings, employment decisions,
+content moderation enforcement, or any other process in which a person bears a
+cost for being flagged.

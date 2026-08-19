@@ -1,0 +1,2290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SlopDetector — lint prose for LLM fingerprints</title>
+<meta name="description" content="Paste text, see which patterns characteristic of LLM-generated prose it triggers, and where. Runs entirely in your browser. 20 categories, 95 patterns.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-2:#12151a; --bg-3:#181c23; --bg-4:#1f242c;
+  --line:#272d37; --line-2:#333b47;
+  --fg:#e7ebf0; --fg-2:#a4aebc; --fg-3:#6d7887;
+  --crit:#ff5c5c; --high:#ffa53d; --med:#5b9dff; --low:#8b95a5;
+  --ok:#3ddc97; --accent:#5b9dff;
+  --crit-bg:rgba(255,92,92,.20); --high-bg:rgba(255,165,61,.20);
+  --med-bg:rgba(91,157,255,.18); --low-bg:rgba(139,149,165,.16);
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --ed-font:var(--mono); --ed-size:14.5px; --ed-lh:1.75; --ed-pad:20px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  display:flex;flex-direction:column}
+button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+a{color:var(--accent)}
+::selection{background:rgba(91,157,255,.35)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------------- top bar ---------------- */
+.top{display:flex;align-items:center;gap:18px;padding:12px 20px;
+  border-bottom:1px solid var(--line);background:var(--bg-2);flex:none;flex-wrap:wrap}
+.logo{display:flex;align-items:baseline;gap:9px;font-family:var(--mono);font-weight:600;
+  letter-spacing:-.02em;font-size:15px}
+.logo b{color:var(--fg)} .logo i{color:var(--accent);font-style:normal}
+.logo .ver{font-size:10.5px;color:var(--fg-3);letter-spacing:.06em}
+.top .spacer{flex:1}
+.tabs{display:flex;background:var(--bg-3);border:1px solid var(--line);border-radius:6px;padding:2px}
+.tabs button{background:none;border:0;padding:5px 14px;border-radius:4px;cursor:pointer;
+  color:var(--fg-2);font-size:13px;font-weight:500}
+.tabs button[aria-selected=true]{background:var(--bg-4);color:var(--fg)}
+.btn{background:var(--bg-3);border:1px solid var(--line);border-radius:6px;padding:7px 13px;
+  cursor:pointer;font-size:13px;font-weight:500;color:var(--fg-2);white-space:nowrap}
+.btn:hover{border-color:var(--line-2);color:var(--fg);background:var(--bg-4)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#06101f;font-weight:600}
+.btn.primary:hover{background:#7db0ff;border-color:#7db0ff;color:#06101f}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---------------- notice ---------------- */
+.notice{display:flex;gap:12px;align-items:flex-start;padding:11px 20px;
+  background:rgba(255,92,92,.09);border-bottom:1px solid rgba(255,92,92,.25);
+  font-size:13px;color:#ffc9c9;flex:none}
+.notice b{color:#ff8f8f}
+.notice p{margin:0;max-width:none}
+.notice .x{background:none;border:0;color:#ff8f8f;cursor:pointer;font-size:16px;line-height:1;padding:0 4px}
+
+/* ---------------- layout ---------------- */
+.main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 400px;min-height:0}
+@media(max-width:1000px){.main{grid-template-columns:1fr;grid-template-rows:minmax(320px,1fr) auto}}
+
+/* ---------------- editor ---------------- */
+.pane{display:flex;flex-direction:column;min-width:0;min-height:0}
+.pane-bar{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line);
+  background:var(--bg-2);font-family:var(--mono);font-size:11.5px;color:var(--fg-3);flex:none;flex-wrap:wrap}
+.pane-bar .spacer{flex:1}
+.pane-bar .stat b{color:var(--fg-2);font-weight:500}
+.editor-wrap{position:relative;flex:1;min-height:0;overflow:hidden;background:var(--bg)}
+.editor-wrap.drop{outline:2px dashed var(--accent);outline-offset:-6px}
+#highlights,#editor,#review{
+  position:absolute;inset:0;margin:0;border:0;
+  padding:var(--ed-pad);
+  font-family:var(--ed-font);font-size:var(--ed-size);line-height:var(--ed-lh);
+  white-space:pre-wrap;overflow-wrap:break-word;word-break:normal;
+  tab-size:4;letter-spacing:0;
+}
+#highlights{overflow:hidden;color:transparent;pointer-events:none;z-index:1;user-select:none}
+#editor{overflow-y:auto;background:transparent;color:var(--fg);resize:none;z-index:2;caret-color:var(--accent)}
+#editor::placeholder{color:var(--fg-3)}
+#review{overflow-y:auto;background:var(--bg);color:var(--fg);z-index:3;display:none}
+body[data-mode=review] #review{display:block}
+body[data-mode=review] #editor,body[data-mode=review] #highlights{visibility:hidden}
+#highlights mark{background:transparent;color:transparent;border-radius:2px;
+  box-shadow:inset 0 -2px 0 currentColor}
+#highlights mark.t-critical{background:var(--crit-bg);color:var(--crit)}
+#highlights mark.t-high{background:var(--high-bg);color:var(--high)}
+#highlights mark.t-medium{background:var(--med-bg);color:var(--med)}
+#highlights mark.t-low{background:var(--low-bg);color:var(--low)}
+#highlights mark.sel{outline:1px solid currentColor;outline-offset:1px}
+#review mark{border-radius:2px;padding:0 1px;cursor:pointer;color:var(--fg);
+  box-shadow:inset 0 -2px 0 var(--mc)}
+#review mark.t-critical{--mc:var(--crit);background:var(--crit-bg)}
+#review mark.t-high{--mc:var(--high);background:var(--high-bg)}
+#review mark.t-medium{--mc:var(--med);background:var(--med-bg)}
+#review mark.t-low{--mc:var(--low);background:var(--low-bg)}
+#review mark:hover,#review mark.sel{filter:brightness(1.5)}
+
+/* ---------------- results rail ---------------- */
+.rail{border-left:1px solid var(--line);background:var(--bg-2);display:flex;flex-direction:column;min-height:0}
+@media(max-width:1000px){.rail{border-left:0;border-top:1px solid var(--line)}}
+.gauge{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;gap:18px;align-items:center;flex:none}
+.gauge .num{font-family:var(--mono);font-size:46px;font-weight:600;line-height:1;
+  font-variant-numeric:tabular-nums;letter-spacing:-.04em;min-width:86px}
+.gauge .meta{flex:1;min-width:0}
+.gauge .band{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+.gauge .sub{font-size:12px;color:var(--fg-3);margin-top:4px}
+.track{height:4px;background:var(--bg-4);border-radius:99px;margin-top:10px;position:relative;overflow:hidden}
+.track i{position:absolute;inset:0 auto 0 0;border-radius:99px;transition:width .35s ease,background .35s}
+.track .ref{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--fg-3)}
+.rail-tabs{display:flex;border-bottom:1px solid var(--line);flex:none}
+.rail-tabs button{flex:1;background:none;border:0;border-bottom:2px solid transparent;
+  padding:10px 6px;cursor:pointer;color:var(--fg-3);font-size:12.5px;font-weight:500}
+.rail-tabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--accent)}
+.rail-body{flex:1;overflow-y:auto;min-height:0}
+.panel{display:none;padding:14px 16px 28px}
+.panel.on{display:block}
+
+.grp{margin-bottom:16px}
+.grp-h{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12.5px;font-weight:600}
+.grp-h .pip{width:8px;height:8px;border-radius:2px;flex:none}
+.grp-h .n{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--fg-3)}
+.pip.t-critical{background:var(--crit)} .pip.t-high{background:var(--high)}
+.pip.t-medium{background:var(--med)} .pip.t-low{background:var(--low)}
+.hit{display:block;width:100%;text-align:left;background:var(--bg-3);border:1px solid var(--line);
+  border-left:2px solid var(--line-2);border-radius:4px;padding:8px 11px;margin:4px 0;cursor:pointer}
+.hit:hover{background:var(--bg-4);border-color:var(--line-2)}
+.hit.sel{background:var(--bg-4);border-color:var(--accent);border-left-color:var(--accent)}
+.hit.t-critical{border-left-color:var(--crit)} .hit.t-high{border-left-color:var(--high)}
+.hit.t-medium{border-left-color:var(--med)} .hit.t-low{border-left-color:var(--low)}
+.hit .q{font-family:var(--mono);font-size:12px;color:var(--fg);display:block;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hit .m{font-family:var(--mono);font-size:10.5px;color:var(--fg-3);margin-top:3px;display:flex;gap:8px}
+.hit .m .sev-error{color:var(--crit)} .hit .m .sev-warn{color:var(--high)}
+
+.detail{border-top:1px solid var(--line);background:var(--bg-3);padding:14px 16px;flex:none;font-size:12.5px}
+.detail h4{margin:0 0 6px;font-size:12.5px;font-weight:600}
+.detail code{font-family:var(--mono);font-size:11px;color:var(--fg-2);background:var(--bg);padding:1px 5px;border-radius:3px}
+.detail p{margin:8px 0 0;color:var(--fg-2);max-width:none}
+.detail p.warn{color:var(--fg-3)}
+.detail .empty{color:var(--fg-3)}
+
+.empty-state{text-align:center;color:var(--fg-3);font-size:13px;padding:44px 16px}
+.empty-state b{display:block;color:var(--fg-2);font-size:14px;margin-bottom:6px}
+
+/* metrics */
+.mrow{display:flex;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.mrow:last-child{border-bottom:0}
+.mrow .k{font-size:12.5px;color:var(--fg-2);flex:1}
+.mrow .v{font-family:var(--mono);font-size:14px;font-variant-numeric:tabular-nums;font-weight:500}
+.mrow .base{font-family:var(--mono);font-size:10.5px;color:var(--fg-3);width:118px;text-align:right}
+.mnote{font-size:11.5px;color:var(--fg-3);margin:14px 0 0}
+
+/* filters */
+.fbar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chip{background:var(--bg-3);border:1px solid var(--line);border-radius:99px;padding:4px 11px;
+  cursor:pointer;font-size:11.5px;font-family:var(--mono);color:var(--fg-3)}
+.chip[aria-pressed=true]{color:var(--fg);border-color:var(--line-2);background:var(--bg-4)}
+.chip[aria-pressed=true].t-critical{color:var(--crit);border-color:var(--crit)}
+.chip[aria-pressed=true].t-high{color:var(--high);border-color:var(--high)}
+.chip[aria-pressed=true].t-medium{color:var(--med);border-color:var(--med)}
+.chip[aria-pressed=true].t-low{color:var(--low);border-color:var(--low)}
+.rule{display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.rule:last-child{border-bottom:0}
+.rule input{accent-color:var(--accent);margin:0;width:14px;height:14px}
+.rule label{flex:1;cursor:pointer;min-width:0}
+.rule .rid{font-family:var(--mono);font-size:10px;color:var(--fg-3);display:block}
+.rule .sev{font-family:var(--mono);font-size:10px;color:var(--fg-3)}
+.sec-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--fg-3);margin:18px 0 8px}
+.sec-h:first-child{margin-top:0}
+
+footer{flex:none;border-top:1px solid var(--line);background:var(--bg-2);padding:10px 20px;
+  font-size:11.5px;color:var(--fg-3);display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+footer .spacer{flex:1}
+footer a{color:var(--fg-2);text-decoration:none}
+footer a:hover{color:var(--accent)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body data-mode="edit">
+
+<header class="top">
+  <div class="logo"><b>Slop</b><i>Detector</i><span class="ver">v2.0 · 20 categories · 95 patterns</span></div>
+  <div class="spacer"></div>
+  <div class="tabs" role="tablist" aria-label="View mode">
+    <button role="tab" id="tab-edit" aria-selected="true" data-mode="edit">Edit</button>
+    <button role="tab" id="tab-review" aria-selected="false" data-mode="review">Review</button>
+  </div>
+  <button class="btn" id="btn-samples">Load sample ▾</button>
+  <button class="btn" id="btn-copy">Copy report</button>
+  <button class="btn" id="btn-json">Download JSON</button>
+  <button class="btn" id="btn-clear">Clear</button>
+</header>
+
+<div class="notice" id="notice">
+  <p><b>This is a style linter, not an authorship detector.</b>
+  It finds habits language models exhibit more often than most human writers — nothing more.
+  Seven commercial detectors once flagged <b>61%</b> of human-written TOEFL essays as machine-written
+  (Liang et al., <em>Patterns</em>, 2023), against 5% for US eighth-graders, because careful formal
+  prose in a second language looks exactly like what a model produces. Use this on your own drafts.
+  Never use it as evidence against a person.</p>
+  <button class="x" id="notice-x" aria-label="Dismiss notice">×</button>
+</div>
+
+<div class="main">
+  <section class="pane" aria-label="Text editor">
+    <div class="pane-bar">
+      <span class="stat"><b id="s-words">0</b> words</span>
+      <span class="stat"><b id="s-chars">0</b> chars</span>
+      <span class="stat"><b id="s-hits">0</b> findings</span>
+      <span class="spacer"></span>
+      <span id="s-mode">paste, type, or drop a .md / .txt file</span>
+    </div>
+    <div class="editor-wrap" id="wrap">
+      <div id="highlights" aria-hidden="true"></div>
+      <textarea id="editor" spellcheck="false" aria-label="Text to analyse"
+        placeholder="Paste a few hundred words here…"></textarea>
+      <div id="review" tabindex="0" aria-label="Annotated review"></div>
+    </div>
+  </section>
+
+  <aside class="rail" aria-label="Results">
+    <div class="gauge">
+      <div class="num" id="g-num">—</div>
+      <div class="meta">
+        <div class="band" id="g-band">awaiting input</div>
+        <div class="sub" id="g-sub">score out of 100</div>
+        <div class="track"><i id="g-bar" style="width:0"></i>
+          <span class="ref" style="left:9.9%" title="human corpus mean: 9.9"></span>
+          <span class="ref" style="left:34%" title="AI corpus mean: 34"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rail-tabs" role="tablist" aria-label="Result panels">
+      <button role="tab" aria-selected="true" data-panel="findings">Findings</button>
+      <button role="tab" aria-selected="false" data-panel="metrics">Metrics</button>
+      <button role="tab" aria-selected="false" data-panel="rules">Rules</button>
+    </div>
+
+    <div class="rail-body">
+      <div class="panel on" id="p-findings" role="tabpanel" aria-live="polite">
+        <div class="empty-state"><b>Nothing analysed yet</b>Paste text on the left, or load a sample.</div>
+      </div>
+      <div class="panel" id="p-metrics" role="tabpanel"></div>
+      <div class="panel" id="p-rules" role="tabpanel"></div>
+    </div>
+
+    <div class="detail" id="detail"><span class="empty">Select a finding to see what it means.</span></div>
+  </aside>
+</div>
+
+<footer>
+  <span id="privacy">🔒 Runs entirely in your browser. No text is uploaded, stored, or logged — check view-source.</span>
+  <span class="spacer"></span>
+  <a href="https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing" target="_blank" rel="noopener noreferrer">Pattern source</a>
+  <a href="#" id="lnk-essay">The research behind it</a>
+  <span>CC BY-NC-SA 4.0</span>
+</footer>
+
+<script>
+
+/* ===================================================================
+ * SlopDetector engine — inlined verbatim from the ai-text-patterns
+ * npm package at build time. Do not edit here; edit pkg/src/ and rerun
+ * tool/build-tool.mjs. Generated 2026-08-19T02:54:16.264Z
+ * =================================================================== */
+/**
+ * ai-text-patterns.js
+ * ---------------------------------------------------------------------------
+ * A regex catalogue of surface-level patterns characteristic of LLM-generated
+ * English prose, organised by category, with a scoring helper.
+ *
+ * WHAT THIS IS:  a style linter. It finds writing habits that large language
+ * models exhibit far more often than most human writers.
+ *
+ * WHAT THIS IS NOT:  an authorship detector. A high score means "this reads
+ * like LLM default register". It does not mean "a machine wrote this", and a
+ * low score does not mean a human did. Published false-positive rates for
+ * real AI detectors run from ~4% per sentence (Turnitin's own figure) to
+ * 61% on human-written essays by non-native English speakers (Liang et al.,
+ * Patterns, 2023). Treat every hit as a prompt to reread a sentence, never as
+ * evidence of misconduct.
+ *
+ * Severity tiers:
+ *   critical — machine artifacts. Essentially never produced by a human
+ *              typing prose. A single hit is close to conclusive that text
+ *              was pasted out of a chatbot.
+ *   high     — assistant-register leakage. Chat scaffolding that survived
+ *              into a document. Rare in edited human prose.
+ *   medium   — rhetorical formulas. Human writers do this, LLMs do it far
+ *              more, and far more mechanically.
+ *   low      — individually meaningless vocabulary and jargon. Only
+ *              informative in aggregate, as density.
+ *
+ * Source material:
+ *   - Wikipedia:Signs of AI writing (WikiProject AI Cleanup), en.wikipedia.org
+ *   - Kobak, González-Márquez, Horvát & Lause, "Delving into LLM-assisted
+ *     writing in biomedical publications through excess vocabulary",
+ *     Science Advances 11(27), 2025. doi:10.1126/sciadv.adt3813
+ *   - Juzek & Ward, "Why Does ChatGPT 'Delve' So Much?", Findings of ACL 2025.
+ *     arXiv:2412.11385
+ *   - Liang et al., "GPT detectors are biased against non-native English
+ *     writers", Patterns 4(7), 2023.
+ *   - Merrill, Chen & Kumer, The Washington Post, 13 Nov 2025.
+ *   - "How to spot AI writing", The Economist, 30 July 2026.
+ *
+ * Engineering notes:
+ *   - Every pattern is a fresh RegExp literal with the `g` flag. Patterns are
+ *     read via String.prototype.matchAll, which clones the regex, so the
+ *     module-level objects never accumulate `lastIndex` state.
+ *   - No nested unbounded quantifiers over overlapping character classes, so
+ *     there is no catastrophic-backtracking exposure. All `.{n,m}` spans are
+ *     explicitly bounded.
+ *   - Lookbehind `(?<=...)` is deliberately avoided for Safari < 16.4
+ *     compatibility. The `u` flag is used only where `\p{...}` is required.
+ *   - Text is normalised (NFC, curly punctuation folded) before matching, so
+ *     patterns are written against straight quotes and plain apostrophes.
+ *     The typography signals are measured separately, before normalisation.
+ *
+ * License: CC BY-NC-SA 4.0 (inherits from the Wikipedia source material).
+ */
+
+/* ==========================================================================
+ * 1. Normalisation
+ * ========================================================================== */
+
+/**
+ * Fold typographic variants so that a single pattern can match both
+ * "it's" and "it’s". Run this before matching, not before measuring
+ * typography (see TYPOGRAPHY_METRICS, which needs the raw characters).
+ *
+ * IMPORTANT - this function is length-preserving. Every replacement maps one
+ * code unit to one code unit, and NFC normalisation is applied only when it
+ * does not change the string's length. Callers depend on this: match offsets
+ * taken against normalised text are reported as line and column numbers in the
+ * ORIGINAL file, so any drift here silently corrupts every position the linter
+ * prints. The test suite pins this property with a property-based check.
+ *
+ * Consequence: an ellipsis folds to a single period rather than expanding to
+ * three. No pattern in the catalogue depends on ellipses.
+ */
+function normalize(text) {
+  let s = String(text);
+  const nfc = s.normalize('NFC');
+  if (nfc.length === s.length) s = nfc;
+  return s
+    .replace(/[‘’‚‛′]/g, "'")
+    .replace(/[“”„‟″]/g, '"')
+    .replace(/[      ⁠]/g, ' ')
+    .replace(/…/g, '.');
+}
+
+/**
+ * Replace fenced and inline code spans with runs of spaces of identical
+ * length. Newlines are preserved so line numbers survive, and total length is
+ * preserved so character offsets survive. Use this instead of deleting code:
+ * deleting it shifts every subsequent offset and corrupts reported positions.
+ */
+function maskCode(text) {
+  const blank = (m) => m.replace(/[^\n]/g, ' ');
+  return String(text)
+    .replace(/```[\s\S]*?(?:```|$)/g, blank)
+    .replace(/~~~[\s\S]*?(?:~~~|$)/g, blank)
+    .replace(/`[^`\n]*`/g, blank);
+}
+
+/**
+ * Build a line-offset index once, then resolve character offsets to 1-based
+ * line/column pairs in O(log n) per lookup.
+ */
+function lineIndex(text) {
+  const starts = [0];
+  for (let i = 0; i < text.length; i++) if (text[i] === '\n') starts.push(i + 1);
+  return {
+    starts,
+    locate(offset) {
+      let lo = 0, hi = starts.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (starts[mid] <= offset) lo = mid; else hi = mid - 1;
+      }
+      return { line: lo + 1, column: offset - starts[lo] + 1 };
+    },
+    lineText(line) {
+      const s = starts[line - 1];
+      if (s === undefined) return '';
+      const e = starts[line] === undefined ? text.length : starts[line] - 1;
+      return text.slice(s, e);
+    }
+  };
+}
+
+const WORD_RE = /[A-Za-z][A-Za-z'-]*/g;
+
+function wordCount(text) {
+  const m = String(text).match(WORD_RE);
+  return m ? m.length : 0;
+}
+
+/* ==========================================================================
+ * 2. The catalogue
+ * ==========================================================================
+ * Each category:
+ *   id        stable machine key
+ *   label     human name
+ *   severity  critical | high | medium | low
+ *   weight    points contributed per distinct hit (see scoreText)
+ *   cap       maximum points this category can contribute
+ *   why       one-line explanation of the underlying cause
+ *   caution   the realistic false-positive scenario
+ *   combined  a single union regex for the whole category
+ *   patterns  individually named sub-patterns
+ */
+
+const CATEGORIES = [
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'tool_artifacts',
+    label: 'Chatbot tool artifacts',
+    severity: 'critical',
+    weight: 40,
+    cap: 60,
+    why:
+      'Internal citation and rendering markup that leaks when a user copies a ' +
+      'chatbot answer out of the web UI. Each vendor has its own signature.',
+    caution:
+      'Almost none. The only realistic false positive is an article that ' +
+      'quotes these markers while discussing AI detection — such as this one.',
+    patterns: [
+      {
+        id: 'openai_citation_markup',
+        vendor: 'ChatGPT',
+        re: /:?contentReference\[oaicite:\d+\]|oai_citation:?\s*\d*|\boaicite\b/g,
+        note: 'ChatGPT reference placeholders.',
+        examples: [':contentReference[oaicite:16]{index=16}', '[oai_citation:0‡example.com]']
+      },
+      {
+        id: 'openai_turn_tokens',
+        vendor: 'ChatGPT',
+        re: /\b(?:cite)?turn\d+(?:search|image|news|file|view|forecast)\d+\b/g,
+        note: 'Search/image result tokens, PUA-wrapped in the original response.',
+        examples: ['citeturn0search1', 'turn0image4']
+      },
+      {
+        id: 'openai_attribution_json',
+        vendor: 'ChatGPT',
+        re: /\{\s*"attribution"\s*:\s*\{\s*"attributableIndex"/g,
+        note: 'JSON attribution blob appended to sentences.',
+        examples: ['({"attribution":{"attributableIndex":"1009-1"}})']
+      },
+      {
+        id: 'gemini_cite_markers',
+        vendor: 'Gemini',
+        re: /\[cite:\s*\d+(?:\s*,\s*\d+)*\]|\[cite_start\]/g,
+        note: 'Gemini inline citation markers.',
+        examples: ['[cite: 17]', '[cite: 19, 20, 21]']
+      },
+      {
+        id: 'gemini_span_markers',
+        vendor: 'Gemini',
+        re: /\[span_\d+\]\((?:start|end)_span\)/g,
+        note: 'Gemini span formatting bug.',
+        examples: ['[span_2](start_span)']
+      },
+      {
+        id: 'grok_cards',
+        vendor: 'Grok',
+        re: /<grok-card\b|grok_render_citation_card_json|data-type="citation_card"/g,
+        note: 'Grok citation card markup.',
+        examples: ['<grok-card data-id="e8ff4f" data-type="citation_card">']
+      },
+      {
+        id: 'deepseek_lenticular',
+        vendor: 'DeepSeek',
+        re: /【\d+†L?\d+(?:-L?\d+)?】/g,
+        note: 'Lenticular-bracket + dagger source refs.',
+        examples: ['【85†L261-269】']
+      },
+      {
+        id: 'perplexity_tags',
+        vendor: 'Perplexity',
+        re: /\[(?:attached_file|web|search):\s*\d+\]|ppl-ai-file-upload/g,
+        note: 'Perplexity attachment and web-result tags.',
+        examples: ['[attached_file:1]', '[web:1]']
+      },
+      {
+        id: 'writing_variant_block',
+        vendor: 'unclassified',
+        re: /:{3}\s*(?:writing|ecriture|écriture)\s*\{\s*(?:variant|variante)\s*=/gi,
+        note: 'Document-variant fence seen from mid-2026.',
+        examples: [':::writing{variant="document" id="68427"}']
+      },
+      {
+        id: 'chatgpt_utm',
+        vendor: 'ChatGPT',
+        re: /utm_source=(?:chatgpt\.com|openai)/gi,
+        note: 'Tracking parameter on links copied out of ChatGPT.',
+        examples: ['https://example.com/?utm_source=chatgpt.com']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'ai_self_reference',
+    label: 'Model self-identification',
+    severity: 'critical',
+    weight: 35,
+    cap: 50,
+    why:
+      'The assistant describing its own nature or limits. Refusal and ' +
+      'disclaimer boilerplate that was never edited out.',
+    caution:
+      'Quoted examples in writing about AI. Check whether the phrase sits ' +
+      'inside quotation marks.',
+    patterns: [
+      {
+        id: 'as_an_ai',
+        re: /\bas an? (?:AI|artificial intelligence)(?: language)?(?: model| assistant| system)?\b/gi,
+        note: 'The canonical tell.',
+        examples: ['As an AI language model, I cannot...']
+      },
+      {
+        id: 'as_a_llm',
+        re: /\bas a large language model\b/gi,
+        note: '',
+        examples: ['As a large language model, I do not have...']
+      },
+      {
+        id: 'no_personal_capacity',
+        re: /\bI (?:don't|do not|cannot|can't) have (?:personal |any )?(?:opinions|feelings|beliefs|preferences|access to real[- ]time|the ability to browse)\b/gi,
+        note: 'Capability disclaimer.',
+        examples: ["I don't have personal opinions, but..."]
+      },
+      {
+        id: 'language_model_self',
+        re: /\bI(?:'m| am) (?:an? )?(?:AI|language model|chatbot|virtual assistant)\b/gi,
+        note: '',
+        examples: ["I'm an AI, so I..."]
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'knowledge_cutoff',
+    label: 'Knowledge-cutoff and source-gap hedging',
+    severity: 'high',
+    weight: 14,
+    cap: 40,
+    why:
+      'The model signalling that its training data ran out, or narrating the ' +
+      'thinness of its own retrieved sources instead of just omitting the claim.',
+    caution:
+      'Legitimate scholarship does say "records are scarce". The tell is the ' +
+      'first-person framing and the reference to "available information".',
+    patterns: [
+      {
+        id: 'last_update',
+        re: /\b(?:as of|up to|until) my (?:last |latest |most recent )?(?:knowledge |training |data )?(?:update|cutoff|cut-off)\b/gi,
+        note: '',
+        examples: ['As of my last knowledge update, ...']
+      },
+      {
+        id: 'available_information',
+        re: /\bbased on (?:the )?(?:available|provided) (?:information|sources|data)\b|\bin the (?:provided|given) sources\b/gi,
+        note: '',
+        examples: ['Based on available information, ...']
+      },
+      {
+        id: 'details_limited',
+        re: /\b(?:while |although )?(?:specific |further |additional )?details (?:are|remain) (?:limited|scarce|sparse|not widely (?:available|documented|disclosed))\b/gi,
+        note: '',
+        examples: ['While specific details are limited, ...']
+      },
+      {
+        id: 'not_widely_documented',
+        re: /\bnot widely (?:available|documented|disclosed|reported|publicised|publicized)\b/gi,
+        note: '',
+        examples: ['His early career is not widely documented.']
+      },
+      {
+        id: 'private_life_speculation',
+        re: /\bkeeps? (?:much of )?(?:his|her|their) personal life private\b|\bmaintains? a low profile\b/gi,
+        note: 'Gap-filling speculation about biography subjects.',
+        examples: ['She keeps much of her personal life private.']
+      },
+      {
+        id: 'inference_disclosure',
+        re: /\bI(?:'ve| have) inferred\b|\bmy analysis is based on\b|\blikely due to limited (?:mainstream )?(?:exposure|coverage|documentation)\b/gi,
+        note: '',
+        examples: ["I've inferred common motifs..."]
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'collaborative_scaffolding',
+    label: 'Conversational scaffolding',
+    severity: 'high',
+    weight: 12,
+    cap: 45,
+    why:
+      'Turn-taking pleasantries from the chat interface. RLHF rewards them; ' +
+      'they have no function inside a finished document.',
+    caution:
+      'Genuine correspondence, teaching material, and newsletters legitimately ' +
+      'address a reader. Weigh by genre — an encyclopedia entry should have none.',
+    patterns: [
+      {
+        id: 'hope_this_helps',
+        re: /\bI hope (?:this|that) helps\b|\bhope this (?:helps|is helpful)\b/gi,
+        note: '',
+        examples: ['I hope this helps!']
+      },
+      {
+        id: 'enthusiastic_openers',
+        re: /(?:^|[.!?]\s+|\n)\s*(?:Certainly|Absolutely|Of course|Sure thing|Great question|Excellent question|Fantastic question|Happy to help)\s*[!,.]/g,
+        note: 'Opening acknowledgement token.',
+        examples: ['Certainly! Here is a summary.']
+      },
+      {
+        id: 'offer_more',
+        re: /\bwould you like me to\b|\blet me know if (?:you|there|that|I)\b|\bfeel free to (?:ask|reach out|let me know)\b|\bif you(?:'d| would) like,? I can\b/gi,
+        note: '',
+        examples: ['Let me know if you would like me to expand this.']
+      },
+      {
+        id: 'here_is_a',
+        re: /\bhere(?:'s| is| are)\s+(?:a|an|the)\s+(?:brief |quick |detailed |comprehensive |more detailed )?(?:breakdown|overview|summary|rundown|deep dive|look at)\b/gi,
+        note: '',
+        examples: ["Here's a detailed breakdown of the options."]
+      },
+      {
+        id: 'lets_dive_in',
+        re: /\blet(?:'s| us) (?:dive (?:in|into)|explore|take a (?:look|closer look)|unpack|break (?:this|it) down|get started)\b/gi,
+        note: '',
+        examples: ["Let's dive into the details."]
+      },
+      {
+        id: 'youre_right',
+        re: /\byou(?:'re| are) (?:absolutely |completely |quite )?right\b|\bgreat point\b|\bthat(?:'s| is) a (?:great|excellent|fair) point\b/gi,
+        note: 'Sycophantic agreement token.',
+        examples: ["You're absolutely right to point that out."]
+      },
+      {
+        id: 'meta_offer_feedback',
+        re: /\bhappy to (?:address|answer|clarify|expand on) any (?:further|additional|other)\b|\bI(?:'m| am) open to (?:any |further )?(?:suggestions|feedback|guidance|input)\b|\bI would (?:greatly )?appreciate (?:your )?(?:guidance|feedback|input)\b/gi,
+        note: '',
+        examples: ['Happy to address any further concerns.']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'placeholder_text',
+    label: 'Unfilled placeholders',
+    severity: 'critical',
+    weight: 25,
+    cap: 40,
+    why:
+      'Template slots the model emitted for a human to fill, shipped unfilled.',
+    caution:
+      'Documentation and code samples use angle-bracket placeholders on ' +
+      'purpose. Restrict this check to prose, not code blocks.',
+    patterns: [
+      {
+        id: 'bracket_insert',
+        re: /\[(?:INSERT|ADD|ENTER|YOUR|PASTE|TODO|TBD|XX+)[^\]\n]{0,40}\]/gi,
+        note: '',
+        examples: ['[INSERT SOURCE URL]', '[Your Name Here]']
+      },
+      {
+        id: 'screaming_snake_slot',
+        re: /\b(?:INSERT|PASTE|ADD)_[A-Z_]{3,}\b|\bSOURCE_(?:URL|PUBLISHER|NAME)\b|\bURL_HERE\b/g,
+        note: '',
+        examples: ['INSERT_SOURCE_URL', 'PASTE_URL_HERE']
+      },
+      {
+        id: 'dummy_date',
+        re: /\b(?:19|20)\d{2}-(?:xx|XX|mm|MM)-(?:xx|XX|dd|DD)\b|\bYYYY-MM-DD\b/g,
+        note: '',
+        examples: ['2025-xx-xx']
+      },
+      {
+        id: 'delete_before_submission',
+        re: /\b(?:delete|remove) this (?:section|line|note|paragraph) before (?:submission|publishing|sending)\b/gi,
+        note: '',
+        examples: ['Delete this section before submission.']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'significance_statements',
+    label: 'Significance and legacy inflation',
+    severity: 'medium',
+    weight: 7,
+    cap: 45,
+    why:
+      'Rather than state a fact and stop, the model appends a claim about why ' +
+      'the fact matters. This is the single most characteristic move in LLM ' +
+      'encyclopedic prose, and the hardest for the model to suppress.',
+    caution:
+      'Obituaries, award citations, and advocacy writing make these claims ' +
+      'sincerely. Density matters more than any single instance.',
+    patterns: [
+      {
+        id: 'stands_as_testament',
+        re: /\b(?:stands?|serves?|remains?) as an? (?:enduring |lasting |powerful |living |stark )?(?:testament|testimony|reminder|symbol|beacon|hallmark|cornerstone|monument|celebration)\b/gi,
+        note: '',
+        examples: ['The bridge stands as a testament to Victorian engineering.']
+      },
+      {
+        id: 'vital_role',
+        re: /\b(?:plays?|played|playing|has played) an? (?:vital|crucial|pivotal|significant|central|key|critical|important|instrumental|major) role\b/gi,
+        note: '',
+        examples: ['She played a pivotal role in the negotiations.']
+      },
+      {
+        id: 'underscores_importance',
+        re: /\b(?:underscore[sd]?|highlight(?:s|ed)?|emphasi[sz]e[sd]?|reflect(?:s|ed)?|demonstrate[sd]?|illustrate[sd]?) (?:the |its |their |his |her )?(?:importance|significance|centrality|enduring|lasting|ongoing|continued|broader|vital)\b/gi,
+        note: '',
+        examples: ['This underscores the importance of early testing.']
+      },
+      {
+        id: 'enduring_legacy',
+        re: /\b(?:enduring|lasting|indelible|profound|far-reaching|ongoing) (?:legacy|impact|influence|mark|imprint|significance|relevance|contribution)\b/gi,
+        note: '',
+        examples: ['He left an indelible mark on the discipline.']
+      },
+      {
+        id: 'turning_point',
+        re: /\b(?:key |major |critical |defining )?turning point\b|\bwatershed moment\b|\bmark(?:s|ed|ing)? a (?:shift|departure|new (?:chapter|era)|milestone)\b|\bsetting the stage for\b/gi,
+        note: '',
+        examples: ['1968 marked a turning point for the movement.']
+      },
+      {
+        id: 'evolving_landscape',
+        re: /\b(?:ever-)?(?:evolving|changing|shifting|dynamic) (?:landscape|world|environment|ecosystem|terrain)\b|\bin (?:today's|the modern) (?:fast-paced|rapidly changing|digital) (?:world|landscape|environment)\b/gi,
+        note: '',
+        examples: ['In the ever-evolving landscape of cybersecurity...']
+      },
+      {
+        id: 'deeply_rooted',
+        re: /\bdeeply (?:rooted|embedded|ingrained|intertwined)\b|\breflects? (?:a )?broader (?:trends?|shifts?|patterns?|movements?)\b|\bfocal point\b/gi,
+        note: '',
+        examples: ['The practice is deeply rooted in local tradition.']
+      },
+      {
+        id: 'contributing_to',
+        re: /\bcontribut(?:es?|ed|ing) to (?:the )?(?:rich |broader |ongoing |overall )?(?:tapestry|fabric|mosaic|development|discourse|understanding|conversation|dialogue)\b/gi,
+        note: '',
+        examples: ['...contributing to the rich tapestry of city life.']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'participial_tackon',
+    label: 'Trailing participial commentary',
+    severity: 'medium',
+    weight: 8,
+    cap: 40,
+    why:
+      'A comma followed by an "-ing" clause that adds evaluation rather than ' +
+      'information. The model uses it to make a bare fact feel analysed.',
+    caution:
+      'Perfectly grammatical and sometimes genuinely informative. The tell is ' +
+      'that the clause could be deleted with zero loss of meaning.',
+    patterns: [
+      {
+        id: 'ing_significance_clause',
+        re: /,\s+(?:highlighting|emphasi[sz]ing|underscoring|showcasing|reflecting|demonstrating|illustrating|signalling|signaling|cementing|solidifying|reinforcing|affirming|confirming|marking|symbolizing|symbolising|embodying|fostering|cultivating|ensuring|encompassing)\s+(?:its|their|his|her|the|a|an)\b/gi,
+        note: 'The core construction.',
+        examples: [', highlighting its cultural significance.']
+      },
+      {
+        id: 'creating_a_space',
+        re: /\bcreating a (?:space|sense|environment|community|platform|foundation) (?:where|for|of)\b|\bfostering a (?:sense|culture|spirit|climate) of\b/gi,
+        note: '',
+        examples: ['...fostering a sense of community.']
+      },
+      {
+        id: 'ongoing_relevance',
+        re: /\b(?:demonstrating|confirming|illustrating|reflecting|affirming)\s+(?:the\s+)?(?:ongoing|enduring|lasting|continued|persistent)\s+(?:relevance|influence|importance|appeal|significance)\b/gi,
+        note: '',
+        examples: ['...confirming the enduring relevance of the form.']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'negative_parallelism',
+    label: 'Negative parallelism',
+    severity: 'medium',
+    weight: 10,
+    cap: 45,
+    why:
+      'Defining something by first denying a lesser description. Documented as ' +
+      'a stereotypical AI construction by the Washington Post, The Economist, ' +
+      'and Russell et al. (ACL 2025).',
+    caution:
+      'A real rhetorical device with a long human pedigree. Speechwriting and ' +
+      'myth-busting listicles use it deliberately. Repetition is the tell.',
+    patterns: [
+      {
+        id: 'not_only_but_also',
+        re: /\bnot only\b[^.!?\n]{1,80}?\bbut(?: also)?\b/gi,
+        note: '',
+        examples: ['Not only did it fail, but it also cost millions.']
+      },
+      {
+        id: 'not_just_its',
+        re: /\bnot (?:just|merely|simply)\b[^.!?\n]{1,80}?[,;—-]\s*(?:it(?:'s| is)|they(?:'re| are)|but)\b/gi,
+        note: '',
+        examples: ["It's not just a phone — it's a platform."]
+      },
+      {
+        id: 'its_not_its',
+        re: /\bit(?:'s| is)\s+not\s+(?:about\s+)?[^.!?\n]{1,60}?[,;—-]\s*it(?:'s| is)\b/gi,
+        note: '',
+        examples: ["It's not about speed, it's about accuracy."]
+      },
+      {
+        id: 'no_no_just',
+        re: /\bno\s+\w+(?:\s+\w+)?,\s+no\s+\w+(?:\s+\w+)?,\s+(?:just|only)\b/gi,
+        note: '',
+        examples: ['No hype, no jargon, just results.']
+      },
+      {
+        id: 'isnt_x_its_y',
+        re: /\b(?:this|that|it|there)\s+(?:is|was)\s?n(?:'|o)t\s+[^.!?\n]{1,60}?[—-]\s*(?:it(?:'s| is)|that(?:'s| is))\b/gi,
+        note: 'Em-dash-joined variant.',
+        examples: ["This isn't a setback — it's a redirection."]
+      },
+      {
+        id: 'rather_than_contrast',
+        re: /\b(?:prioriti[sz]ing|choosing|favou?ring|emphasi[sz]ing|seeking)\b[^.!?\n]{1,70}?\brather than\b/gi,
+        note: 'The reversed form; common in Grok output.',
+        examples: ['...prioritizing consolidation rather than ideological purity.']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'rule_of_three',
+    label: 'Mechanical triads',
+    severity: 'medium',
+    weight: 5,
+    cap: 25,
+    why:
+      'LLMs reach for three-item lists far more often than the content ' +
+      'warrants, especially adjective triads used to pad a thin claim.',
+    caution:
+      'Highest false-positive category in this file. Three-item lists are ' +
+      'ordinary English. Only meaningful when several appear per paragraph.',
+    patterns: [
+      {
+        id: 'adjective_triad',
+        re: /\b(\w+ly\s+)?(\w{4,}),\s+(\w{4,}),\s+and\s+(\w{4,})\b/g,
+        note: 'Generic X, Y, and Z triad. Count, do not read individually.',
+        examples: ['clear, concise, and compelling']
+      },
+      {
+        id: 'triad_closer',
+        re: /\b\w+,\s+\w+,\s+and\s+\w+\s+(?:alike|together|combined|all at once)\b/gi,
+        note: '',
+        examples: ['critics, fans, and scholars alike']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'ritual_conclusion',
+    label: 'Ritual conclusions',
+    severity: 'medium',
+    weight: 9,
+    cap: 30,
+    why:
+      'Chat answers are trained to close with a wrap-up. Transplanted into an ' +
+      'article, the summary restates what the reader just read.',
+    caution:
+      'Academic papers and reports have legitimate conclusion sections. The ' +
+      'tell is a summary paragraph closing every section, not just the piece.',
+    patterns: [
+      {
+        id: 'in_conclusion',
+        re: /(?:^|\n|[.!?]\s+)\s*(?:In (?:conclusion|summary|essence|short)|Ultimately|Overall|To sum up|All in all|In the end),/g,
+        note: '',
+        examples: ['In conclusion, the evidence is mixed.']
+      },
+      {
+        id: 'conclusion_heading',
+        re: /^[ \t]*#{1,6}\s*(?:Conclusion|Summary|Final [Tt]houghts|Key [Tt]akeaways?|Wrapping [Uu]p|The [Bb]ottom [Ll]ine|Future [Oo]utlook|Looking [Aa]head)\s*:?\s*$/gm,
+        note: '',
+        examples: ['## Key Takeaways']
+      },
+      {
+        id: 'bottom_line',
+        re: /\bthe bottom line (?:is|here is)\b|\bat the end of the day,/gi,
+        note: '',
+        examples: ['The bottom line is that costs rose.']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'challenges_and_future',
+    label: 'Challenges-and-future formula',
+    severity: 'medium',
+    weight: 9,
+    cap: 30,
+    why:
+      'A structural template: concede a difficulty, then reassure. It fills ' +
+      'space without adding a single verifiable fact.',
+    caution:
+      'Strategy documents and policy briefs are supposed to do this. Judge by ' +
+      'whether the challenges are named specifically or gestured at.',
+    patterns: [
+      {
+        id: 'despite_challenges',
+        re: /\bdespite (?:these |its |the |such )?(?:challenges|obstacles|setbacks|difficulties|limitations|criticism)\b/gi,
+        note: '',
+        examples: ['Despite these challenges, the project continues to thrive.']
+      },
+      {
+        id: 'faces_challenges',
+        re: /\bfaces? (?:several |a number of |numerous |significant |ongoing )?(?:challenges|hurdles|obstacles)(?: that must be addressed)?\b/gi,
+        note: '',
+        examples: ['The sector faces several challenges that must be addressed.']
+      },
+      {
+        id: 'continues_to',
+        re: /\bcontinue[sd]? to (?:evolve|thrive|grow|shape|serve|inspire|play|provide|resonate|attract)\b/gi,
+        note: '',
+        examples: ['The festival continues to thrive.']
+      },
+      {
+        id: 'future_lies_in',
+        re: /\bthe future of\b[^.!?\n]{1,60}?\b(?:lies in|will depend on|hinges on|remains (?:bright|uncertain|promising))\b|\bpositions? (?:it|them|itself) (?:well )?for (?:future|continued|further)\b/gi,
+        note: '',
+        examples: ['The future of the format lies in its ability to adapt.']
+      },
+      {
+        id: 'sparked_conversation',
+        re: /\b(?:sparked|prompted|generated|ignited|raised) (?:broader |wider |important |renewed )?(?:conversations?|debates?|discussions?|reflections?|questions?) (?:about|around|regarding)\b/gi,
+        note: '',
+        examples: ['The ruling sparked broader conversations about privacy.']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'vague_attribution',
+    label: 'Vague attribution',
+    severity: 'medium',
+    weight: 8,
+    cap: 35,
+    why:
+      'Consensus asserted without a nameable source. The model cannot cite ' +
+      'what it does not have, so it invokes an anonymous collective.',
+    caution:
+      'Journalism uses "experts say" under real deadline constraints. The ' +
+      'question to ask is whether a name appears anywhere nearby.',
+    patterns: [
+      {
+        id: 'experts_say',
+        re: /\b(?:experts|analysts|observers|critics|commentators|scholars|researchers|historians|industry (?:experts|analysts|watchers))\s+(?:say|said|argue|argued|note|noted|believe|suggest|contend|have (?:noted|argued|suggested|cited|observed))\b/gi,
+        note: '',
+        examples: ['Experts argue that the trend will continue.']
+      },
+      {
+        id: 'studies_have_shown',
+        re: /\b(?:studies|research|reports|surveys|data)\s+(?:have |has )?(?:shown|suggest(?:ed)?|indicate[sd]?|reveal(?:ed)?|found)\b(?![^.!?\n]{0,60}\b(?:19|20)\d{2}\b)/gi,
+        note: 'Only fires when no year appears in the same sentence.',
+        examples: ['Studies have shown a link between the two.']
+      },
+      {
+        id: 'several_sources',
+        re: /\b(?:several|multiple|various|numerous|a number of)\s+(?:sources|publications|outlets|commentators|accounts)\b/gi,
+        note: '',
+        examples: ['Several sources suggest otherwise.']
+      },
+      {
+        id: 'widely_regarded',
+        re: /\b(?:widely|generally|commonly|often)\s+(?:regarded|considered|recognised|recognized|acknowledged|seen|viewed|described|praised|hailed)\s+as\b/gi,
+        note: '',
+        examples: ['Widely regarded as a masterpiece.']
+      },
+      {
+        id: 'media_presence',
+        re: /\bmaintains? an? (?:active|strong|significant|growing) (?:social media|digital|online|public) presence\b|\b(?:featured|profiled|covered) in (?:local|regional|national|international) (?:media )?outlets\b/gi,
+        note: 'Notability puffery.',
+        examples: ['She maintains an active social media presence.']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'editorial_hedging',
+    label: 'Editorialising hedges',
+    severity: 'medium',
+    weight: 6,
+    cap: 30,
+    why:
+      'Instructing the reader how to weigh a fact instead of presenting it. ' +
+      'Safety training rewards this register heavily.',
+    caution:
+      'Common in genuine explanatory and pedagogical writing.',
+    patterns: [
+      {
+        id: 'important_to_note',
+        re: /\bit(?:'s| is) (?:important|crucial|essential|vital|worth|useful|helpful|necessary) to (?:note|remember|consider|recognise|recognize|understand|emphasi[sz]e|highlight|acknowledge|point out|keep in mind)\b/gi,
+        note: '',
+        examples: ["It's important to note that results vary."]
+      },
+      {
+        id: 'worth_noting',
+        re: /\b(?:it is |it's )?worth (?:noting|mentioning|considering|remembering) that\b|\bnotably,|\bimportantly,/gi,
+        note: '',
+        examples: ['Worth noting that the sample was small.']
+      },
+      {
+        id: 'may_vary',
+        re: /\bmay vary (?:depending|based) on\b|\bresults (?:may|can) vary\b|\byour mileage may vary\b/gi,
+        note: '',
+        examples: ['Costs may vary depending on region.']
+      },
+      {
+        id: 'both_sides',
+        re: /\bwhile\b[^.!?\n]{1,70}?,\s*it(?:'s| is) (?:also )?(?:important|worth|crucial|essential)\b/gi,
+        note: 'False-balance construction.',
+        examples: ["While the data is promising, it's important to remain cautious."]
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'promotional_puffery',
+    label: 'Promotional puffery',
+    severity: 'medium',
+    weight: 6,
+    cap: 35,
+    why:
+      'Travel-brochure register. The model reaches for evaluative adjectives ' +
+      'when it lacks specific facts about a place, person, or product.',
+    caution:
+      'Marketing copy is supposed to sound like this. Only a tell in registers ' +
+      'that claim neutrality.',
+    patterns: [
+      {
+        id: 'nestled_in_heart',
+        re: /\bnestled (?:in|among|between|within)\b|\bin the heart of\b|\b(?:serves?|acts?) as (?:the |a )?gateway\b|\bhidden gem\b/gi,
+        note: '',
+        examples: ['Nestled in the heart of the old town...']
+      },
+      {
+        id: 'breathtaking_adjectives',
+        re: /\b(?:breathtaking|stunning|captivating|mesmeri[sz]ing|awe-inspiring|picturesque|idyllic|charming|quaint|bustling|vibrant|thriving|renowned|acclaimed|groundbreaking|revolutionary|cutting-edge|state-of-the-art|world-class|unparalleled|unrivalled|unrivaled)\b/gi,
+        note: 'Count as density, not as individual hits.',
+        examples: ['a breathtaking view of the valley']
+      },
+      {
+        id: 'rich_tapestry',
+        re: /\b(?:rich|vibrant|diverse|colou?rful|intricate) (?:tapestry|mosaic|blend|array|heritage|history|culture|tradition)\b/gi,
+        note: '',
+        examples: ['a rich tapestry of influences']
+      },
+      {
+        id: 'commitment_to',
+        re: /\b(?:unwavering|steadfast|deep|strong|ongoing) commitment to\b|\bdedication to (?:excellence|quality|innovation|sustainability)\b/gi,
+        note: '',
+        examples: ['their unwavering commitment to quality']
+      },
+      {
+        id: 'boasts',
+        re: /\bboasts (?:a|an|the|over|more than|some)\b/gi,
+        note: '',
+        examples: ['The campus boasts a modern library.']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'copula_avoidance',
+    label: 'Copula avoidance',
+    severity: 'low',
+    weight: 3,
+    cap: 24,
+    why:
+      'LLMs substitute elaborate verbs for "is", "are", and "has". Geng & ' +
+      'Trotta measured a >10% drop in "is"/"are" in academic writing in 2023.',
+    caution:
+      'Each of these verbs has honest uses. This is a density signal only.',
+    patterns: [
+      {
+        id: 'serves_as',
+        re: /\b(?:serves?|served|stands?|stood|functions?|operates?|acts?|emerges?|positions? itself) as (?:a|an|the|one of)\b/gi,
+        note: '',
+        examples: ['The hall serves as a community centre.']
+      },
+      {
+        id: 'represents_a',
+        re: /\brepresents? (?:a|an|one of|the)\b|\bmarks? (?:a|an|the) (?:first|beginning|start|shift|milestone)\b/gi,
+        note: '',
+        examples: ['The move represents a significant change.']
+      },
+      {
+        id: 'features_offers',
+        re: /\b(?:features?|offers?|houses?|showcases?|encompasses|comprises|holds the distinction of being)\s+(?:a|an|the|over|more than|several|numerous)\b/gi,
+        note: '',
+        examples: ['The building features a glass atrium.']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'ai_vocabulary',
+    label: 'Overrepresented vocabulary',
+    severity: 'low',
+    weight: 2,
+    cap: 30,
+    why:
+      'Words whose post-2022 frequency jumped measurably. Kobak et al. (2025) ' +
+      'found "delves" at 28x its extrapolated 2024 frequency in PubMed ' +
+      'abstracts; Juzek & Ward report even larger ratios for "delving" and ' +
+      '"showcasing" in scientific abstracts.',
+    caution:
+      'Every one of these is an ordinary English word. A single use means ' +
+      'nothing whatsoever. Clustering is the only meaningful signal, and this ' +
+      'category is the primary driver of bias against non-native English ' +
+      'writers, who tend toward formal register. Weight accordingly.',
+    patterns: [
+      {
+        id: 'era_gpt4',
+        era: '2023 to mid-2024',
+        re: /\b(?:delv(?:e|es|ed|ing)|tapestr(?:y|ies)|testament|pivotal|meticulous(?:ly)?|intricac(?:y|ies)|intricate|underscor(?:e|es|ed|ing)|bolster(?:ed|ing)?|garner(?:ed|ing)?|interplay|multifaceted|nuanced)\b/gi,
+        note: 'Peak-GPT-4 register.',
+        examples: ['delve into the intricacies']
+      },
+      {
+        id: 'era_gpt4o',
+        era: 'mid-2024 to mid-2025',
+        re: /\b(?:showcas(?:e|es|ed|ing)|foster(?:s|ed|ing)?|align(?:s|ed|ing)? with|enhanc(?:e|es|ed|ing)|enduring|crucial|vibrant|holistic|seamless(?:ly)?|robust|comprehensive|leverage[sd]?|realm|landscape)\b/gi,
+        note: '',
+        examples: ['a seamless and robust solution']
+      },
+      {
+        id: 'era_current',
+        era: 'mid-2025 onward',
+        re: /\b(?:emphasi[sz]ing|highlighting|showcasing|deep dive|actionable|streamlin(?:e|es|ed|ing)|empower(?:s|ed|ing)?|unlock(?:s|ed|ing)? the (?:potential|power)|game[- ]chang(?:er|ing)|paradigm shift)\b/gi,
+        note: '',
+        examples: ['unlock the potential of your data']
+      },
+      {
+        id: 'sentence_initial_additionally',
+        re: /(?:^|\n)\s*(?:Additionally|Moreover|Furthermore|Notably|Consequently|Nevertheless|Nonetheless),/gm,
+        note: 'Sentence-initial connective. Human writers vary these more.',
+        examples: ['Additionally, the cost fell.']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'business_jargon',
+    label: 'Consulting jargon',
+    severity: 'low',
+    weight: 3,
+    cap: 24,
+    why:
+      'Corporate register the model defaults to for any business-adjacent ' +
+      'prompt, regardless of whether the subject is commercial.',
+    caution:
+      'A real dialect spoken by real people in real meetings. Only a tell ' +
+      'outside its native habitat.',
+    patterns: [
+      {
+        id: 'synergy_family',
+        re: /\b(?:synerg(?:y|ies|istic)|actionable insights?|value[- ]add(?:ed)?|best[- ]in[- ]class|mission[- ]critical|core competenc(?:y|ies)|low[- ]hanging fruit|move the needle|circle back|touch base|boil the ocean|north star metric)\b/gi,
+        note: '',
+        examples: ['actionable insights that move the needle']
+      },
+      {
+        id: 'stakeholder_speak',
+        re: /\b(?:key stakeholders?|cross[- ]functional|end[- ]to[- ]end|scalable solutions?|drive (?:growth|value|impact|adoption)|operationali[sz]e|ideate|bandwidth for)\b/gi,
+        note: '',
+        examples: ['align key stakeholders end-to-end']
+      },
+      {
+        id: 'transformation_speak',
+        re: /\b(?:digital transformation|thought leader(?:ship)?|disrupt(?:ive|ion)? (?:innovation|technolog)|next[- ]generation|future[- ]proof|holistic approach|strategic imperative)\b/gi,
+        note: '',
+        examples: ['a holistic approach to digital transformation']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'data_analysis_phrases',
+    label: 'Analysis-report register',
+    severity: 'low',
+    weight: 4,
+    cap: 24,
+    why:
+      'Formulaic framing the model wraps around numbers, often when the ' +
+      'numbers themselves are thin or unsourced.',
+    caution:
+      'Standard in analyst reports and data journalism.',
+    patterns: [
+      {
+        id: 'data_reveals',
+        re: /\bthe (?:data|numbers|figures|results|findings|evidence|analysis) (?:reveals?|shows?|suggests?|tells? (?:a|us)|paints? a (?:picture|clear picture)|speaks? for itself)\b/gi,
+        note: '',
+        examples: ['The data paints a clear picture.']
+      },
+      {
+        id: 'at_a_glance',
+        re: /\b(?:at a glance|key (?:takeaways?|findings?|highlights?|metrics|insights?)|by the numbers|tl;?dr)\b/gi,
+        note: '',
+        examples: ['Key takeaways at a glance']
+      },
+      {
+        id: 'deep_dive_analysis',
+        re: /\b(?:let(?:'s| us) )?(?:take a )?(?:deep dive|closer look) (?:into|at)\b|\bdiving deeper\b|\bunpack(?:ing)? the (?:data|numbers|findings)\b/gi,
+        note: '',
+        examples: ['A deep dive into the quarterly figures']
+      },
+      {
+        id: 'suggests_trend',
+        re: /\b(?:indicat(?:es?|ing)|suggest(?:s|ing)?|point(?:s|ing)? to) a (?:growing|clear|strong|significant|notable|marked|worrying|promising) (?:trend|shift|correlation|pattern|increase|decline)\b/gi,
+        note: '',
+        examples: ['This points to a growing trend.']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'emoji_formatting',
+    label: 'Emoji as structure',
+    severity: 'high',
+    weight: 12,
+    cap: 36,
+    why:
+      'Decorating headings and bullets with a leading pictograph. Rare in ' +
+      'edited prose in any genre outside social posts and release notes.',
+    caution:
+      'Changelogs, README files, Slack messages, and consumer newsletters use ' +
+      'emoji headings by convention. Genre-dependent.',
+    patterns: [
+      {
+        id: 'emoji_heading',
+        re: /^[ \t]*#{1,6}\s*\p{Extended_Pictographic}/gmu,
+        note: 'Markdown heading opening with an emoji.',
+        examples: ['## 🚀 Getting Started']
+      },
+      {
+        id: 'emoji_bullet',
+        re: /^[ \t]*(?:[-*+]|\d+\.)\s+\p{Extended_Pictographic}/gmu,
+        note: 'List item opening with an emoji.',
+        examples: ['- ✅ Ship the feature']
+      },
+      {
+        id: 'emoji_label_line',
+        re: /^[ \t]*\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*\s*\*{0,2}[A-Z][^\n]{0,60}:/gmu,
+        note: 'Emoji-led pseudo-heading followed by a colon.',
+        examples: ['🧠 Cognitive Dissonance Pattern:']
+      },
+      {
+        id: 'checkmark_cross_pairs',
+        re: /(?:✅|✔️|❌|⚠️|🔑|💡|🚀|📌|🎯|🔥|✨)/gu,
+        note: 'The specific decorative set LLMs favour. Density signal.',
+        examples: ['✅ Pros / ❌ Cons']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'formatting_tells',
+    label: 'Structural formatting tells',
+    severity: 'medium',
+    weight: 6,
+    cap: 30,
+    why:
+      'Markdown habits from the chat interface surviving into a document: ' +
+      'bolded label lists, title-case headings, gratuitous horizontal rules.',
+    caution:
+      'These are legitimate formatting choices. They only become evidence ' +
+      'when they appear in a venue whose house style forbids them.',
+    patterns: [
+      {
+        id: 'inline_header_list',
+        re: /^[ \t]*(?:[-*+]|\d+\.)\s+\*\*[^*\n]{2,60}\*\*\s*[:—-]/gm,
+        note: 'Bullet + bold label + colon. The single most recognisable ' +
+              'LLM list shape.',
+        examples: ['- **Scalability**: handles growth gracefully']
+      },
+      {
+        id: 'title_case_heading',
+        re: /^[ \t]*#{2,6}\s+(?:[A-Z][a-z']+\s+){2,}[A-Z][a-z']+\s*$/gm,
+        note: 'Every Word Capitalised In A Heading.',
+        examples: ['### Early Career And Professional Development']
+      },
+      {
+        id: 'thematic_break_spam',
+        re: /^[ \t]*(?:---|\*\*\*|___)\s*$/gm,
+        note: 'Horizontal rules between every section. Density signal.',
+        examples: ['---']
+      },
+      {
+        id: 'bold_lead_in',
+        re: /^[ \t]*\*\*[^*\n]{2,60}\*\*\s*$/gm,
+        note: 'A bolded line standing in for a real heading.',
+        examples: ['**Key considerations**']
+      },
+      {
+        id: 'heading_then_heading',
+        re: /^[ \t]*#{1,3}\s+[^\n]{1,60}\n+[ \t]*#{2,4}\s+/gm,
+        note: 'A heading whose only child is another heading.',
+        examples: ['# Overview\n## Background']
+      }
+    ]
+  }
+];
+
+/* Attach a combined union regex per category, built from its sub-patterns. */
+for (const cat of CATEGORIES) {
+  const parts = cat.patterns.map((p) => `(?:${p.re.source})`);
+  // Union preserves each sub-pattern's semantics; flags are the superset used
+  // across the category (unicode only where a sub-pattern needs it).
+  const needsU = cat.patterns.some((p) => p.re.flags.includes('u'));
+  const needsM = cat.patterns.some((p) => p.re.flags.includes('m'));
+  const needsI = cat.patterns.some((p) => p.re.flags.includes('i'));
+  cat.combined = new RegExp(
+    parts.join('|'),
+    'g' + (needsI ? 'i' : '') + (needsM ? 'm' : '') + (needsU ? 'u' : '')
+  );
+}
+
+/* ==========================================================================
+ * 3. Typography and density metrics
+ * ==========================================================================
+ * Signals that are statistical rather than lexical. These run on the RAW
+ * text, before normalize(), because the exact characters are the evidence.
+ */
+
+const TYPOGRAPHY_METRICS = {
+  /**
+   * Em-dash rate per 1,000 words. Freeburg (2026) measured instruction-tuned
+   * models between 0.0 and 9.1 per 1,000 words depending on vendor and
+   * prompt. The Economist (July 2026) found that among current models only
+   * Claude exceeded professional human writers. Typical edited human prose
+   * sits near 1-2 per 1,000. Spaced em dashes ( — ) are the stronger tell:
+   * most humans who reach for an em dash close it up.
+   */
+  emDashRate(raw) {
+    const words = wordCount(raw) || 1;
+    const all = (raw.match(/—/g) || []).length;
+    const spaced = (raw.match(/\s—\s/g) || []).length;
+    return {
+      total: all,
+      spaced,
+      perThousand: +((all / words) * 1000).toFixed(2),
+      spacedShare: all ? +(spaced / all).toFixed(2) : 0,
+      flag: (all / words) * 1000 > 3
+    };
+  },
+
+  /**
+   * Curly-quote usage. Weak on its own: Word, macOS, and any professional
+   * typesetting pipeline produce curly quotes. Mixing both styles in one
+   * document is the more interesting signal.
+   */
+  curlyQuotes(raw) {
+    const curly = (raw.match(/[‘’“”]/g) || []).length;
+    const straight = (raw.match(/["']/g) || []).length;
+    return {
+      curly,
+      straight,
+      mixed: curly > 0 && straight > 0,
+      flag: curly > 0 && straight > 0
+    };
+  },
+
+  /**
+   * Sentence-length uniformity ("burstiness"). Human prose varies sentence
+   * length far more than LLM prose. Reported as the coefficient of variation
+   * of sentence word counts; low values are the suspicious direction.
+   * Needs at least 5 sentences to mean anything.
+   */
+  burstiness(raw) {
+    const sentences = raw
+      .replace(/\n+/g, ' ')
+      .split(/(?<=[.!?])\s+/)
+      .map((s) => wordCount(s))
+      .filter((n) => n > 2);
+    if (sentences.length < 5) {
+      return { sentences: sentences.length, cv: null, flag: false, note: 'too few sentences' };
+    }
+    const mean = sentences.reduce((a, b) => a + b, 0) / sentences.length;
+    const variance =
+      sentences.reduce((a, b) => a + (b - mean) ** 2, 0) / sentences.length;
+    const cv = Math.sqrt(variance) / mean;
+    return {
+      sentences: sentences.length,
+      meanLength: +mean.toFixed(1),
+      cv: +cv.toFixed(3),
+      flag: cv < 0.35
+    };
+  },
+
+  /**
+   * Paragraph-length uniformity. LLMs produce suspiciously even blocks.
+   */
+  paragraphUniformity(raw) {
+    const paras = raw.split(/\n\s*\n/).map((p) => wordCount(p)).filter((n) => n > 15);
+    if (paras.length < 3) return { paragraphs: paras.length, cv: null, flag: false };
+    const mean = paras.reduce((a, b) => a + b, 0) / paras.length;
+    const variance = paras.reduce((a, b) => a + (b - mean) ** 2, 0) / paras.length;
+    const cv = Math.sqrt(variance) / mean;
+    return { paragraphs: paras.length, meanLength: +mean.toFixed(1), cv: +cv.toFixed(3), flag: cv < 0.25 };
+  }
+};
+
+/* ==========================================================================
+ * 4. Scoring
+ * ========================================================================== */
+
+/**
+ * Analyse text and return a structured report.
+ *
+ * @param {string} text
+ * @param {object} [opts]
+ * @param {boolean} [opts.stripCodeBlocks=true]  ignore fenced code
+ * @param {string[]} [opts.only]  restrict to these category ids
+ * @returns {{score:number, band:string, wordCount:number, categories:Array, metrics:object, topHits:Array}}
+ */
+function scoreText(text, opts = {}) {
+  const { stripCodeBlocks = true, only = null } = opts;
+
+  const raw = String(text);
+  // maskCode blanks code spans in place rather than removing them, so every
+  // reported match index remains a valid offset into `raw`.
+  const working = stripCodeBlocks ? maskCode(raw) : raw;
+  const norm = normalize(working);
+  const words = wordCount(norm);
+  const per1k = words > 0 ? 1000 / words : 0;
+
+  const results = [];
+  let rawScore = 0;
+
+  for (const cat of CATEGORIES) {
+    if (only && !only.includes(cat.id)) continue;
+
+    const hits = [];
+    for (const p of cat.patterns) {
+      // Emoji and formatting patterns must see the un-normalised text so that
+      // pictographs and markdown structure survive.
+      const target =
+        cat.id === 'emoji_formatting' || cat.id === 'formatting_tells' ? working : norm;
+      for (const m of target.matchAll(p.re)) {
+        hits.push({
+          pattern: p.id,
+          match: m[0].trim().slice(0, 120),
+          index: m.index
+        });
+      }
+    }
+
+    if (!hits.length) continue;
+
+    // Distinct surface forms matter more than raw repetition of one phrase.
+    const distinct = new Set(hits.map((h) => h.match.toLowerCase())).size;
+    const points = Math.min(cat.cap, distinct * cat.weight);
+    rawScore += points;
+
+    results.push({
+      id: cat.id,
+      label: cat.label,
+      severity: cat.severity,
+      count: hits.length,
+      distinct,
+      points,
+      per1000Words: +(hits.length * per1k).toFixed(2),
+      why: cat.why,
+      caution: cat.caution,
+      hits: hits.slice(0, 25)
+    });
+  }
+
+  const metrics = {
+    emDash: TYPOGRAPHY_METRICS.emDashRate(raw),
+    quotes: TYPOGRAPHY_METRICS.curlyQuotes(raw),
+    burstiness: TYPOGRAPHY_METRICS.burstiness(norm),
+    paragraphs: TYPOGRAPHY_METRICS.paragraphUniformity(norm)
+  };
+  if (metrics.emDash.flag) rawScore += 6;
+  if (metrics.burstiness.flag) rawScore += 6;
+  if (metrics.paragraphs.flag) rawScore += 4;
+  if (metrics.quotes.flag) rawScore += 2;
+
+  // Length normalisation: a 3,000-word essay has more room to accumulate hits
+  // than a tweet. Scale toward a 500-word reference document, but never
+  // inflate very short texts.
+  const lengthFactor = words > 0 ? Math.min(1.6, Math.max(0.6, 500 / Math.max(words, 120))) : 1;
+  const score = Math.max(0, Math.min(100, Math.round(rawScore * lengthFactor)));
+
+  const band =
+    score >= 65 ? 'strong LLM register'
+      : score >= 35 ? 'mixed signals'
+        : score >= 15 ? 'faint traces'
+          : 'no meaningful signal';
+
+  results.sort((a, b) => b.points - a.points);
+
+  return {
+    score,
+    band,
+    wordCount: words,
+    categories: results,
+    metrics,
+    topHits: results.flatMap((r) =>
+      r.hits.slice(0, 3).map((h) => ({ category: r.id, severity: r.severity, match: h.match }))
+    ).slice(0, 20)
+  };
+}
+
+/**
+ * Convenience: test one category id against text, returning matches only.
+ */
+function matchCategory(text, categoryId) {
+  const cat = CATEGORIES.find((c) => c.id === categoryId);
+  if (!cat) throw new Error(`Unknown category: ${categoryId}`);
+  const norm = normalize(String(text));
+  return [...norm.matchAll(cat.combined)].map((m) => ({ match: m[0], index: m.index }));
+}
+
+/** Flat map of every sub-pattern, keyed `category.pattern`. */
+const PATTERN_INDEX = Object.fromEntries(
+  CATEGORIES.flatMap((c) => c.patterns.map((p) => [`${c.id}.${p.id}`, p.re]))
+);
+
+
+
+/**
+ * lint.js — turn pattern matches into positioned, severity-resolved findings.
+ *
+ * The library's scoreText gives a document-level view. A linter needs the
+ * opposite: individual findings with a file, line, column, rule id, severity,
+ * and enough context to print. This module provides that, and resolves each
+ * finding's severity through the ESLint-style `rules` config.
+ */
+
+
+
+const SEVERITY_RANK = { off: 0, warn: 1, error: 2 };
+const CAT_BY_ID = new Map(CATEGORIES.map((c) => [c.id, c]));
+
+/**
+ * Lint a single text.
+ *
+ * @param {string} text
+ * @param {object} opts
+ * @param {string} [opts.filePath]              label used in reports
+ * @param {Record<string,string>} opts.rules    categoryId -> off|warn|error
+ * @param {boolean} [opts.maskCodeSpans=true]
+ * @param {number|null} [opts.threshold=null]   document score gate
+ * @param {number} [opts.maxHitsPerRule=0]      0 = unlimited
+ * @returns {{filePath:string, score:number, band:string, wordCount:number,
+ *            findings:Array, errorCount:number, warningCount:number,
+ *            thresholdExceeded:boolean, metrics:object}}
+ */
+function lintText(text, opts = {}) {
+  const {
+    filePath = '<text>',
+    rules = {},
+    maskCodeSpans = true,
+    threshold = null,
+    maxHitsPerRule = 0
+  } = opts;
+
+  const raw = String(text);
+  const working = maskCodeSpans ? maskCode(raw) : raw;
+  const norm = normalize(working);
+  const idx = lineIndex(raw);
+
+  const findings = [];
+  let errorCount = 0;
+  let warningCount = 0;
+
+  for (const cat of CATEGORIES) {
+    const sev = resolveSeverity(cat, rules);
+    if (sev === 'off') continue;
+
+    // Emoji and structural patterns need the un-normalised text; everything
+    // else matches the folded form. Both are the same length as `raw`.
+    const structural = cat.id === 'emoji_formatting' || cat.id === 'formatting_tells';
+    const target = structural ? working : norm;
+
+    let n = 0;
+    for (const p of cat.patterns) {
+      for (const m of target.matchAll(p.re)) {
+        if (maxHitsPerRule && n >= maxHitsPerRule) break;
+        n++;
+        // Some patterns legitimately begin with a sentence terminator or
+        // leading whitespace (e.g. `[.!?]\s+` before "In conclusion"). Point
+        // the reported position at the first meaningful character instead, so
+        // an editor jumping to line:column lands on the phrase itself.
+        const rawLead = /^[.!?]?\s*/.exec(m[0])[0].length;
+        const lead = rawLead < m[0].length ? rawLead : 0;
+        const start = m.index + lead;
+        const { line, column } = idx.locate(start);
+        // The reported match must be exactly the text at the reported
+        // position, otherwise an editor's jump-to-line lands off the phrase.
+        const shown = m[0].slice(lead).trim();
+        findings.push({
+          filePath,
+          ruleId: `${cat.id}/${p.id}`,
+          category: cat.id,
+          categoryLabel: cat.label,
+          pattern: p.id,
+          severity: sev,
+          tier: cat.severity,
+          line,
+          column,
+          endColumn: column + shown.split('\n')[0].length,
+          offset: start,
+          match: shown,
+          text: idx.lineText(line),
+          message: `${cat.label}: ${JSON.stringify(truncate(shown, 60))}`,
+          help: cat.why,
+          caution: cat.caution
+        });
+        if (sev === 'error') errorCount++; else warningCount++;
+      }
+    }
+  }
+
+  findings.sort((a, b) => a.line - b.line || a.column - b.column);
+
+  const deduped = dedupeOverlaps(findings);
+  errorCount = deduped.filter((f) => f.severity === 'error').length;
+  warningCount = deduped.filter((f) => f.severity === 'warn').length;
+
+  // Document-level score, from the library's own weighting.
+  const { score, band, metrics } = scoreOnly(raw, working, norm);
+  const thresholdExceeded = threshold != null && score >= threshold;
+
+  return {
+    filePath,
+    score,
+    band,
+    wordCount: wordCount(norm),
+    findings: deduped,
+    errorCount,
+    warningCount,
+    thresholdExceeded,
+    metrics
+  };
+}
+
+/**
+ * Several patterns in one category often describe the same construction from
+ * different angles: "not just X — it's Y" trips three negative_parallelism
+ * patterns at once. Reporting all three tells the reader nothing extra and
+ * inflates counts that CI gates on, so keep the longest span per overlapping
+ * group. Overlaps ACROSS categories are kept: those are genuinely different
+ * observations about the same words.
+ */
+function dedupeOverlaps(findings) {
+  const byCategory = new Map();
+  for (const f of findings) {
+    if (!byCategory.has(f.category)) byCategory.set(f.category, []);
+    byCategory.get(f.category).push(f);
+  }
+  const keep = [];
+  for (const group of byCategory.values()) {
+    // Longest first, so the most specific span claims the region.
+    const ordered = [...group].sort((a, b) => b.match.length - a.match.length);
+    const claimed = [];
+    for (const f of ordered) {
+      const start = f.offset, end = f.offset + f.match.length;
+      if (claimed.some(([s, e]) => start < e && end > s)) continue;
+      claimed.push([start, end]);
+      keep.push(f);
+    }
+  }
+  return keep.sort((a, b) => a.line - b.line || a.column - b.column || a.ruleId.localeCompare(b.ruleId));
+}
+
+/**
+ * Resolve a category's configured severity.
+ * Precedence: explicit user rule > per-rule default override > tier default.
+ */
+function resolveSeverity(cat, rules = {}) {
+  const explicit = rules[cat.id];
+  if (explicit != null) return normalizeSeverity(explicit);
+  if (DEFAULT_RULE_OVERRIDES[cat.id] != null) {
+    return normalizeSeverity(DEFAULT_RULE_OVERRIDES[cat.id]);
+  }
+  return normalizeSeverity(DEFAULT_TIER_SEVERITY[cat.severity] ?? 'off');
+}
+
+const DEFAULT_TIER_SEVERITY = {
+  critical: 'error',
+  high: 'error',
+  medium: 'warn',
+  low: 'off'
+};
+
+/**
+ * Per-rule departures from the tier default. This lives in the library, not in
+ * the CLI's config defaults, so that every surface — CLI, API, and the inlined
+ * page engine — resolves the same severity for the same input. Putting it in
+ * one consumer's defaults is how the CLI and the API silently disagreed.
+ *
+ * rule_of_three is a `medium` rule but ships `off`: it matched 94% of the
+ * documents in the human control corpus, against 83% of the LLM documents.
+ * By density it still carries a 4.4x lift, so it is kept and opt-in rather
+ * than deleted.
+ */
+const DEFAULT_RULE_OVERRIDES = {
+  rule_of_three: 'off'
+};
+
+function normalizeSeverity(v) {
+  if (v === 0 || v === '0' || v === false || v === 'off') return 'off';
+  if (v === 1 || v === '1' || v === 'warn' || v === 'warning') return 'warn';
+  if (v === 2 || v === '2' || v === true || v === 'error') return 'error';
+  throw new Error(`Invalid severity: ${JSON.stringify(v)} (use off|warn|error or 0|1|2)`);
+}
+
+/* Score the document without duplicating the per-finding walk above. */
+function scoreOnly(raw, working, norm) {
+  const words = wordCount(norm) || 1;
+  let rawScore = 0;
+  for (const cat of CATEGORIES) {
+    const structural = cat.id === 'emoji_formatting' || cat.id === 'formatting_tells';
+    const target = structural ? working : norm;
+    const seen = new Set();
+    for (const p of cat.patterns) {
+      for (const m of target.matchAll(p.re)) seen.add(m[0].trim().toLowerCase());
+    }
+    if (seen.size) rawScore += Math.min(cat.cap, seen.size * cat.weight);
+  }
+  const metrics = {
+    emDash: TYPOGRAPHY_METRICS.emDashRate(raw),
+    quotes: TYPOGRAPHY_METRICS.curlyQuotes(raw),
+    burstiness: TYPOGRAPHY_METRICS.burstiness(norm),
+    paragraphs: TYPOGRAPHY_METRICS.paragraphUniformity(norm)
+  };
+  if (metrics.emDash.flag) rawScore += 6;
+  if (metrics.burstiness.flag) rawScore += 6;
+  if (metrics.paragraphs.flag) rawScore += 4;
+  if (metrics.quotes.flag) rawScore += 2;
+
+  const lengthFactor = Math.min(1.6, Math.max(0.6, 500 / Math.max(words, 120)));
+  const score = Math.max(0, Math.min(100, Math.round(rawScore * lengthFactor)));
+  const band =
+    score >= 65 ? 'strong LLM register'
+      : score >= 35 ? 'mixed signals'
+        : score >= 15 ? 'faint traces'
+          : 'no meaningful signal';
+  return { score, band, metrics };
+}
+
+/** Aggregate several file results into a run summary. */
+function summarize(results, { maxWarnings = -1 } = {}) {
+  const errorCount = results.reduce((a, r) => a + r.errorCount, 0);
+  const warningCount = results.reduce((a, r) => a + r.warningCount, 0);
+  const overThreshold = results.filter((r) => r.thresholdExceeded);
+  const failed =
+    errorCount > 0 ||
+    overThreshold.length > 0 ||
+    (maxWarnings >= 0 && warningCount > maxWarnings);
+  return {
+    fileCount: results.length,
+    errorCount,
+    warningCount,
+    overThreshold: overThreshold.map((r) => ({ filePath: r.filePath, score: r.score })),
+    maxWarnings,
+    failed
+  };
+}
+
+/** Every valid rule id, for config validation and `--print-rules`. */
+function listRules() {
+  return CATEGORIES.map((c) => ({
+    id: c.id,
+    label: c.label,
+    tier: c.severity,
+    defaultSeverity: DEFAULT_TIER_SEVERITY[c.severity],
+    patterns: c.patterns.map((p) => p.id),
+    why: c.why,
+    caution: c.caution
+  }));
+}
+
+function isKnownRule(id) { return CAT_BY_ID.has(id); }
+
+function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+
+window.SlopEngine = {
+  CATEGORIES, lintText, summarize, listRules, dedupeOverlaps,
+  normalize, maskCode, lineIndex, wordCount, TYPOGRAPHY_METRICS,
+  DEFAULT_TIER_SEVERITY
+};
+
+</script>
+<script>
+(function(){
+'use strict';
+var E = window.SlopEngine;
+var TIERS = ['critical','high','medium','low'];
+var TIER_RANK = { critical:0, high:1, medium:2, low:3 };
+
+/* ---------- baselines measured in the validation run ---------- */
+var BASE = {
+  score:   { ai:'34.0', human:'9.9' },
+  emDash:  { ai:'2.65', human:'0.26' },
+  cv:      { ai:'0.546', human:'0.606' }
+};
+
+var SAMPLES = {
+  'AI · article register':
+"The institute stands as a testament to the enduring legacy of regional research, playing a pivotal role in shaping the intellectual landscape of the province. Experts argue that it has garnered recognition across disciplines, underscoring its significance within the broader academic community.\n\nIt's important to note that this is not just a research facility — it's a vibrant hub where scholars, students, and practitioners alike converge. Additionally, its meticulous approach continues to foster a sense of shared purpose, contributing to the rich tapestry of regional scholarship.\n\nDespite these challenges, the institute continues to thrive. In conclusion, while specific details about recent funding are not widely documented, its contribution remains a lasting testament to its founders' vision.",
+  'AI · chat register':
+"Certainly! Here's a detailed breakdown of the key considerations.\n\n## 🎯 Key Highlights\n\n- **Scalability**: Delving into the intricacies of distributed systems.\n- **Reliability**: Showcasing an unwavering commitment to uptime.\n- **Cost**: Leveraging robust, seamless infrastructure.\n\nAs an AI language model, I should note that as of my last knowledge update, pricing may vary depending on region. See [INSERT PRICING URL] for details.\n\nI hope this helps! Let me know if you would like me to expand on any section.",
+  'AI · tool artifacts':
+"The company was founded in 2010 :contentReference[oaicite:16]{index=16} and now employs 400 people [cite: 17]. Revenue reached $4M in 2023 【85†L261-269】.\n\nIts flagship product launched in 2019 [attached_file:1] and was later reviewed by industry press citeturn0search3.\n\nSee https://example.com/about?utm_source=chatgpt.com for the official history.",
+  'Human · Wikipedia 2017':
+"The kiwifruit is native to central and eastern China. The first recorded description of the plant dates to the 12th century, during the Song dynasty.\n\nSeeds were carried to New Zealand in 1904 by Mary Isabel Fraser, principal of Wanganui Girls' College, who had been visiting mission schools in Yichang. Alexander Allison, a nurseryman, planted them in 1906 and the vines first fruited in 1910. Commercial plantings began in the 1940s and exports to the United States began in 1959.\n\nVines are dioecious, so both male and female plants are needed for pollination. Commercial orchards typically plant one male for every six to eight females, and many growers introduce beehives during flowering."
+};
+
+/* ---------- element refs ---------- */
+var $ = function(id){ return document.getElementById(id); };
+var ed = $('editor'), hl = $('highlights'), rv = $('review'), wrap = $('wrap');
+var gNum = $('g-num'), gBand = $('g-band'), gSub = $('g-sub'), gBar = $('g-bar');
+var pFind = $('p-findings'), pMet = $('p-metrics'), pRules = $('p-rules'), detail = $('detail');
+
+/* ---------- state ---------- */
+var mutedRules = { rule_of_three:true, ai_vocabulary:true, copula_avoidance:true, business_jargon:true };
+var tierOn = { critical:true, high:true, medium:true, low:true };
+var last = null, selected = -1;
+
+function activeRules(){
+  var r = {};
+  E.CATEGORIES.forEach(function(c){
+    var def = E.DEFAULT_TIER_SEVERITY[c.severity] || 'off';
+    // The page shows medium/low tiers by default (the CLI keeps them quieter),
+    // because here the user is reading, not gating a build.
+    if (def === 'off') def = 'warn';
+    r[c.id] = (mutedRules[c.id] || !tierOn[c.severity]) ? 'off' : def;
+  });
+  return r;
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"]/g, function(ch){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[ch];
+  });
+}
+
+/* ----------------------------------------------------------------
+ * Flatten findings into non-overlapping spans.
+ * Findings from DIFFERENT categories may legitimately cover the same
+ * words, but a DOM range cannot. Sweep the boundaries and give each
+ * elementary interval to the highest-tier finding covering it.
+ * ---------------------------------------------------------------- */
+function flatten(findings, len){
+  if (!findings.length) return [];
+  var bounds = {};
+  findings.forEach(function(f){
+    bounds[f.offset] = 1;
+    bounds[Math.min(len, f.offset + f.match.length)] = 1;
+  });
+  var pts = Object.keys(bounds).map(Number).sort(function(a,b){ return a-b; });
+  var out = [];
+  for (var i = 0; i < pts.length - 1; i++) {
+    var s = pts[i], e = pts[i+1];
+    if (e <= s) continue;
+    var best = null, bestIdx = -1;
+    for (var j = 0; j < findings.length; j++) {
+      var f = findings[j];
+      if (f.offset <= s && f.offset + f.match.length >= e) {
+        if (!best || TIER_RANK[f.tier] < TIER_RANK[best.tier]) { best = f; bestIdx = j; }
+      }
+    }
+    if (!best) continue;
+    var prev = out[out.length-1];
+    if (prev && prev.end === s && prev.idx === bestIdx) prev.end = e;
+    else out.push({ start:s, end:e, tier:best.tier, idx:bestIdx });
+  }
+  return out;
+}
+
+function renderSpans(text, spans, target, interactive){
+  var html = '', cur = 0;
+  spans.forEach(function(sp){
+    if (sp.start > cur) html += esc(text.slice(cur, sp.start));
+    var cls = 't-' + sp.tier + (sp.idx === selected ? ' sel' : '');
+    html += '<mark class="' + cls + '"' + (interactive ? ' data-i="' + sp.idx + '" tabindex="0"' : '') + '>'
+         +  esc(text.slice(sp.start, sp.end)) + '</mark>';
+    cur = sp.end;
+  });
+  html += esc(text.slice(cur));
+  // A trailing newline is not rendered by the browser; pad so the underlay
+  // stays aligned with the textarea's scroll height.
+  target.innerHTML = html + '\n';
+}
+
+/* ---------- main analyse ---------- */
+var MAX = 200000;
+function analyse(){
+  var text = ed.value;
+  $('s-chars').textContent = text.length.toLocaleString();
+
+  if (text.length > MAX) {
+    $('s-mode').textContent = 'input over ' + MAX.toLocaleString() + ' chars — analysing the first ' + MAX.toLocaleString();
+    text = text.slice(0, MAX);
+  } else {
+    $('s-mode').textContent = 'paste, type, or drop a .md / .txt file';
+  }
+
+  if (!text.trim()) {
+    last = null; selected = -1;
+    hl.innerHTML = ''; rv.innerHTML = '';
+    $('s-words').textContent = '0'; $('s-hits').textContent = '0';
+    gNum.textContent = '—'; gNum.style.color = '';
+    gBand.textContent = 'awaiting input'; gBand.style.color = '';
+    gSub.textContent = 'score out of 100'; gBar.style.width = '0';
+    pFind.innerHTML = '<div class="empty-state"><b>Nothing analysed yet</b>Paste text on the left, or load a sample.</div>';
+    pMet.innerHTML = ''; renderRules();
+    detail.innerHTML = '<span class="empty">Select a finding to see what it means.</span>';
+    return;
+  }
+
+  var r = E.lintText(text, { filePath:'input', rules:activeRules() });
+  last = r;
+  if (selected >= r.findings.length) selected = -1;
+
+  $('s-words').textContent = r.wordCount.toLocaleString();
+  $('s-hits').textContent = r.findings.length;
+
+  var col = r.score >= 65 ? 'var(--crit)' : r.score >= 35 ? 'var(--high)' : r.score >= 15 ? 'var(--med)' : 'var(--ok)';
+  gNum.textContent = r.score; gNum.style.color = col;
+  gBand.textContent = r.band; gBand.style.color = col;
+  gSub.textContent = r.errorCount + ' error' + (r.errorCount===1?'':'s') + ' · ' +
+                     r.warningCount + ' warning' + (r.warningCount===1?'':'s');
+  gBar.style.width = Math.min(100, r.score) + '%'; gBar.style.background = col;
+
+  var spans = flatten(r.findings, text.length);
+  renderSpans(text, spans, hl, false);
+  renderSpans(text, spans, rv, true);
+  syncScroll();
+  renderFindings(r);
+  renderMetrics(r);
+  renderRules();
+}
+
+function renderFindings(r){
+  if (!r.findings.length) {
+    pFind.innerHTML = '<div class="empty-state"><b>No patterns matched</b>Either the prose is clean, or the rules you want are muted in the Rules tab.</div>';
+    return;
+  }
+  var groups = {};
+  r.findings.forEach(function(f, i){
+    (groups[f.category] = groups[f.category] || { label:f.categoryLabel, tier:f.tier, items:[] })
+      .items.push({ f:f, i:i });
+  });
+  var keys = Object.keys(groups).sort(function(a,b){
+    var d = TIER_RANK[groups[a].tier] - TIER_RANK[groups[b].tier];
+    return d || groups[b].items.length - groups[a].items.length;
+  });
+  var html = '';
+  keys.forEach(function(k){
+    var g = groups[k];
+    html += '<div class="grp"><div class="grp-h"><span class="pip t-'+g.tier+'"></span>'
+         +  esc(g.label) + '<span class="n">' + g.items.length + '</span></div>';
+    g.items.forEach(function(it){
+      html += '<button class="hit t-'+it.f.tier+(it.i===selected?' sel':'')+'" data-i="'+it.i+'">'
+           +  '<span class="q">' + esc(it.f.match.replace(/\s+/g,' ')) + '</span>'
+           +  '<span class="m"><span class="sev-'+it.f.severity+'">'+it.f.severity+'</span>'
+           +  '<span>'+it.f.line+':'+it.f.column+'</span>'
+           +  '<span>'+esc(it.f.pattern)+'</span></span></button>';
+    });
+    html += '</div>';
+  });
+  pFind.innerHTML = html;
+}
+
+function renderMetrics(r){
+  var m = r.metrics;
+  function row(k, v, base, title){
+    return '<div class="mrow" title="'+esc(title||'')+'"><span class="k">'+k+'</span>'
+         + '<span class="v">'+v+'</span><span class="base">'+base+'</span></div>';
+  }
+  pMet.innerHTML =
+    '<div class="sec-h">Typography</div>'
+    + row('Em dashes per 1,000 words', m.emDash.perThousand,
+          'AI '+BASE.emDash.ai+' · human '+BASE.emDash.human,
+          'Measured across the validation corpora.')
+    + row('Spaced em dashes', m.emDash.spaced + ' / ' + m.emDash.total, 'spaced is the stronger tell')
+    + row('Curly + straight quotes mixed', m.quotes.mixed ? 'yes' : 'no', m.quotes.curly + ' curly')
+    + '<div class="sec-h">Rhythm</div>'
+    + row('Sentence-length variation (CV)', m.burstiness.cv == null ? 'n/a' : m.burstiness.cv,
+          'AI '+BASE.cv.ai+' · human '+BASE.cv.human)
+    + row('Mean sentence length', m.burstiness.meanLength == null ? 'n/a' : m.burstiness.meanLength + ' words',
+          m.burstiness.sentences + ' sentences')
+    + row('Paragraph uniformity (CV)', m.paragraphs.cv == null ? 'n/a' : m.paragraphs.cv,
+          m.paragraphs.paragraphs + ' paragraphs')
+    + '<p class="mnote"><strong>On burstiness:</strong> sentence-length variation is the most repeated '
+    + 'heuristic in AI detection, and it did not survive testing. Across the corpora it came out at '
+    + BASE.cv.ai + ' for LLM text and ' + BASE.cv.human + ' for human text — no useful separation. '
+    + 'It is shown because it is interesting, and it contributes almost nothing to the score.</p>'
+    + '<p class="mnote"><strong>On em dashes:</strong> a tenfold gap held up in testing, but this is the '
+    + 'fastest-decaying signal of all. GPT-5.1 was explicitly tuned to suppress em dashes, and by mid-2026 '
+    + 'only Claude used them more than professional human writers.</p>';
+}
+
+function renderRules(){
+  var html = '<div class="sec-h">Severity tiers</div><div class="fbar">';
+  TIERS.forEach(function(t){
+    html += '<button class="chip t-'+t+'" data-tier="'+t+'" aria-pressed="'+(tierOn[t]?'true':'false')+'">'+t+'</button>';
+  });
+  html += '</div><div class="sec-h">Categories</div>';
+  E.CATEGORIES.slice().sort(function(a,b){ return TIER_RANK[a.severity]-TIER_RANK[b.severity]; })
+    .forEach(function(c){
+      var on = !mutedRules[c.id] && tierOn[c.severity];
+      var n = last ? last.findings.filter(function(f){ return f.category===c.id; }).length : 0;
+      html += '<div class="rule">'
+        + '<input type="checkbox" id="r-'+c.id+'" data-rule="'+c.id+'"'+(on?' checked':'')
+        + (tierOn[c.severity]?'':' disabled')+'>'
+        + '<label for="r-'+c.id+'">'+esc(c.label)+'<span class="rid">'+c.id+' · '+c.patterns.length+' patterns</span></label>'
+        + '<span class="sev">'+(n?n:'')+'</span></div>';
+    });
+  html += '<p class="mnote"><strong>Muted by default:</strong> mechanical triads, AI vocabulary, '
+       +  'copula avoidance and consulting jargon. Three-item lists matched 94% of the human control '
+       +  'corpus, and the vocabulary list is the main driver of bias against non-native English '
+       +  'writers. Enable them to explore, not to judge.</p>';
+  pRules.innerHTML = html;
+}
+
+function showDetail(i){
+  if (!last || !last.findings[i]) {
+    detail.innerHTML = '<span class="empty">Select a finding to see what it means.</span>';
+    return;
+  }
+  var f = last.findings[i];
+  detail.innerHTML =
+    '<h4>' + esc(f.categoryLabel) + '</h4>'
+    + '<code>' + esc(f.ruleId) + '</code> <code>' + f.tier + '</code> <code>line ' + f.line + '</code>'
+    + '<p>' + esc(f.help) + '</p>'
+    + '<p class="warn"><strong>False positives:</strong> ' + esc(f.caution) + '</p>';
+}
+
+function select(i){
+  selected = i;
+  if (last) {
+    var spans = flatten(last.findings, ed.value.length);
+    renderSpans(ed.value, spans, hl, false);
+    renderSpans(ed.value, spans, rv, true);
+    syncScroll();
+  }
+  Array.prototype.forEach.call(pFind.querySelectorAll('.hit'), function(b){
+    b.classList.toggle('sel', Number(b.getAttribute('data-i')) === i);
+  });
+  showDetail(i);
+
+  var f = last && last.findings[i];
+  if (!f) return;
+  if (document.body.dataset.mode === 'edit') {
+    ed.focus();
+    ed.setSelectionRange(f.offset, f.offset + f.match.length);
+    // Scroll the caret roughly into view.
+    var lh = parseFloat(getComputedStyle(ed).lineHeight) || 24;
+    ed.scrollTop = Math.max(0, (f.line - 4) * lh);
+    syncScroll();
+  } else {
+    var mk = rv.querySelector('mark[data-i="'+i+'"]');
+    if (mk && mk.scrollIntoView) mk.scrollIntoView({ block:'center' });
+  }
+}
+
+function syncScroll(){ hl.scrollTop = ed.scrollTop; hl.scrollLeft = ed.scrollLeft; }
+
+/* ---------- report builders ---------- */
+function jsonReport(){
+  if (!last) return null;
+  var s = E.summarize([last], { maxWarnings:-1 });
+  return {
+    version: 1,
+    summary: { files:1, errors:s.errorCount, warnings:s.warningCount,
+               overThreshold:s.overThreshold, failed:s.failed },
+    disclaimer: 'Style signals only. Not evidence of authorship. Published AI detectors show '
+      + 'false-positive rates up to 61% on human text by non-native English writers.',
+    results: [{
+      filePath:'input', score:last.score, band:last.band, wordCount:last.wordCount,
+      errorCount:last.errorCount, warningCount:last.warningCount,
+      thresholdExceeded:last.thresholdExceeded, metrics:last.metrics,
+      findings:last.findings.map(function(f){
+        return { ruleId:f.ruleId, category:f.category, severity:f.severity, tier:f.tier,
+                 line:f.line, column:f.column, endColumn:f.endColumn, match:f.match, message:f.message };
+      })
+    }]
+  };
+}
+
+function textReport(){
+  if (!last) return 'Nothing analysed.';
+  var L = ['SlopDetector report',
+    'score ' + last.score + '/100 — ' + last.band,
+    last.wordCount + ' words · ' + last.errorCount + ' errors · ' + last.warningCount + ' warnings', ''];
+  last.findings.forEach(function(f){
+    L.push(f.line + ':' + f.column + '  ' + f.severity + '  ' + f.categoryLabel + '  "' + f.match.replace(/\s+/g,' ') + '"  [' + f.ruleId + ']');
+  });
+  L.push('', 'em dashes/1k: ' + last.metrics.emDash.perThousand + ' (AI corpus ' + BASE.emDash.ai + ', human ' + BASE.emDash.human + ')');
+  L.push('sentence-length CV: ' + last.metrics.burstiness.cv);
+  L.push('', 'Style signals only — not evidence of authorship.');
+  return L.join('\n');
+}
+
+function download(name, text, type){
+  var b = new Blob([text], { type:type });
+  var u = URL.createObjectURL(b), a = document.createElement('a');
+  a.href = u; a.download = name; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); setTimeout(function(){ URL.revokeObjectURL(u); }, 1000);
+}
+
+function flash(btn, msg){
+  var old = btn.textContent; btn.textContent = msg;
+  setTimeout(function(){ btn.textContent = old; }, 1400);
+}
+
+/* ---------- events ---------- */
+var t;
+ed.addEventListener('input', function(){
+  clearTimeout(t);
+  t = setTimeout(function(){ selected = -1; analyse(); }, 220);
+});
+ed.addEventListener('scroll', syncScroll);
+
+pFind.addEventListener('click', function(e){
+  var b = e.target.closest('.hit');
+  if (b) select(Number(b.getAttribute('data-i')));
+});
+rv.addEventListener('click', function(e){
+  var m = e.target.closest('mark[data-i]');
+  if (m) select(Number(m.getAttribute('data-i')));
+});
+rv.addEventListener('keydown', function(e){
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  var m = e.target.closest('mark[data-i]');
+  if (m) { e.preventDefault(); select(Number(m.getAttribute('data-i'))); }
+});
+rv.addEventListener('mouseover', function(e){
+  var m = e.target.closest('mark[data-i]');
+  if (m) showDetail(Number(m.getAttribute('data-i')));
+});
+
+pRules.addEventListener('click', function(e){
+  var chip = e.target.closest('.chip[data-tier]');
+  if (chip) {
+    var tr = chip.getAttribute('data-tier');
+    tierOn[tr] = !tierOn[tr];
+    selected = -1; analyse(); return;
+  }
+});
+pRules.addEventListener('change', function(e){
+  var cb = e.target.closest('input[data-rule]');
+  if (!cb) return;
+  mutedRules[cb.getAttribute('data-rule')] = !cb.checked;
+  selected = -1; analyse();
+});
+
+Array.prototype.forEach.call(document.querySelectorAll('.rail-tabs button'), function(b){
+  b.addEventListener('click', function(){
+    Array.prototype.forEach.call(document.querySelectorAll('.rail-tabs button'), function(x){
+      x.setAttribute('aria-selected', String(x === b));
+    });
+    ['findings','metrics','rules'].forEach(function(p){
+      $('p-' + p).classList.toggle('on', p === b.getAttribute('data-panel'));
+    });
+  });
+});
+
+Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function(b){
+  b.addEventListener('click', function(){
+    var mode = b.getAttribute('data-mode');
+    document.body.dataset.mode = mode;
+    Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function(x){
+      x.setAttribute('aria-selected', String(x === b));
+    });
+    if (mode === 'review') rv.scrollTop = ed.scrollTop;
+    else { ed.scrollTop = rv.scrollTop; syncScroll(); }
+  });
+});
+
+$('btn-clear').addEventListener('click', function(){
+  ed.value = ''; selected = -1; analyse(); ed.focus();
+});
+$('btn-copy').addEventListener('click', function(){
+  var btn = this;
+  var txt = textReport();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(function(){ flash(btn, 'Copied ✓'); },
+      function(){ flash(btn, 'Copy failed'); });
+  } else { flash(btn, 'Unavailable'); }
+});
+$('btn-json').addEventListener('click', function(){
+  var r = jsonReport();
+  if (!r) { flash(this, 'Nothing yet'); return; }
+  download('slopdetector-report.json', JSON.stringify(r, null, 2), 'application/json');
+});
+
+/* sample menu */
+$('btn-samples').addEventListener('click', function(e){
+  e.stopPropagation();
+  var old = document.getElementById('menu');
+  if (old) { old.remove(); return; }
+  var m = document.createElement('div');
+  m.id = 'menu';
+  m.style.cssText = 'position:absolute;z-index:99;background:var(--bg-3);border:1px solid var(--line-2);'
+    + 'border-radius:6px;padding:5px;box-shadow:0 12px 32px rgba(0,0,0,.5);min-width:210px';
+  var r = this.getBoundingClientRect();
+  m.style.top = (r.bottom + 6) + 'px';
+  m.style.left = Math.max(8, r.right - 210) + 'px';
+  Object.keys(SAMPLES).forEach(function(k){
+    var b = document.createElement('button');
+    b.textContent = k;
+    b.style.cssText = 'display:block;width:100%;text-align:left;background:none;border:0;'
+      + 'padding:8px 11px;border-radius:4px;cursor:pointer;font-size:13px;color:var(--fg-2)';
+    b.addEventListener('mouseenter', function(){ b.style.background='var(--bg-4)'; b.style.color='var(--fg)'; });
+    b.addEventListener('mouseleave', function(){ b.style.background='none'; b.style.color='var(--fg-2)'; });
+    b.addEventListener('click', function(){
+      ed.value = SAMPLES[k]; selected = -1; analyse(); m.remove();
+    });
+    m.appendChild(b);
+  });
+  document.body.appendChild(m);
+});
+document.addEventListener('click', function(){
+  var m = document.getElementById('menu'); if (m) m.remove();
+});
+
+$('notice-x').addEventListener('click', function(){ $('notice').style.display = 'none'; });
+
+/* file drop */
+['dragenter','dragover'].forEach(function(ev){
+  wrap.addEventListener(ev, function(e){ e.preventDefault(); wrap.classList.add('drop'); });
+});
+['dragleave','drop'].forEach(function(ev){
+  wrap.addEventListener(ev, function(e){ e.preventDefault(); wrap.classList.remove('drop'); });
+});
+wrap.addEventListener('drop', function(e){
+  var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (!f) return;
+  var fr = new FileReader();
+  fr.onload = function(){ ed.value = String(fr.result); selected = -1; analyse(); };
+  fr.readAsText(f);
+});
+
+analyse();
+})();
+</script>
+</body>
+</html>

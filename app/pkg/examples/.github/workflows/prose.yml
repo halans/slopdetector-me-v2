@@ -1,0 +1,23 @@
+name: prose
+
+on:
+  pull_request:
+    paths: ['**/*.md', '**/*.mdx', '**/*.txt']
+
+permissions:
+  contents: read
+
+jobs:
+  ai-text-patterns:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+
+      - run: npm install --no-save ai-text-patterns
+
+      # `github` format emits workflow commands, so findings appear as
+      # inline annotations on the pull request diff.
+      - name: Lint prose
+        run: npx slop "**/*.md" --format github --min-tier high

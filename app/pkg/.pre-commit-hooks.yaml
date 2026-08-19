@@ -1,0 +1,20 @@
+- id: ai-text-patterns
+  name: ai-text-patterns (prose style)
+  description: >-
+    Lint prose for the stylistic fingerprints of LLM-generated text.
+    Style signals only, not authorship detection.
+  entry: slop
+  language: node
+  types_or: [markdown, plain-text]
+  args: ['--max-warnings', '0']
+
+- id: ai-text-patterns-strict
+  name: ai-text-patterns (critical artifacts only)
+  description: >-
+    Block only unambiguous chatbot artifacts: vendor citation markup,
+    model self-identification, and unfilled placeholders. Near-zero
+    false-positive rate, safe as a hard gate.
+  entry: slop
+  language: node
+  types_or: [markdown, plain-text]
+  args: ['--min-tier', 'critical']

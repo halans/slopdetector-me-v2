@@ -1,0 +1,84 @@
+Self-test: 101/101 documented examples match their pattern
+
+SCORE DISTRIBUTION
+┌──────────────────┬────┬──────┬────────┬─────┬─────┬─────┬─────┐
+│ (index)          │ n  │ mean │ median │ min │ max │ p25 │ p75 │
+├──────────────────┼────┼──────┼────────┼─────┼─────┼─────┼─────┤
+│ AI articles      │ 29 │ 34   │ 31     │ 3   │ 87  │ 17  │ 39  │
+│ AI chat-register │ 6  │ 55.5 │ 62     │ 29  │ 66  │ 54  │ 64  │
+│ Human 2017       │ 16 │ 9.9  │ 9      │ 4   │ 20  │ 6   │ 15  │
+└──────────────────┴────┴──────┴────────┴─────┴─────┴─────┴─────┘
+
+THRESHOLD SWEEP  (positive = flagged as LLM register)
+┌─────────┬───────────┬─────────────────────┬─────────────────┬───────────┐
+│ (index) │ threshold │ recall (AI flagged) │ false positives │ precision │
+├─────────┼───────────┼─────────────────────┼─────────────────┼───────────┤
+│ 0       │ 15        │ '24/29 = 83%'       │ '4/16 = 25%'    │ '86%'     │
+│ 1       │ 25        │ '19/29 = 66%'       │ '0/16 = 0%'     │ '100%'    │
+│ 2       │ 35        │ '11/29 = 38%'       │ '0/16 = 0%'     │ '100%'    │
+│ 3       │ 45        │ '6/29 = 21%'        │ '0/16 = 0%'     │ '100%'    │
+│ 4       │ 55        │ '6/29 = 21%'        │ '0/16 = 0%'     │ '100%'    │
+│ 5       │ 65        │ '5/29 = 17%'        │ '0/16 = 0%'     │ '100%'    │
+│ 6       │ 75        │ '2/29 = 7%'         │ '0/16 = 0%'     │ '100%'    │
+└─────────┴───────────┴─────────────────────┴─────────────────┴───────────┘
+
+PER-CATEGORY  (docs containing >=1 hit, and hits per 1,000 words)
+┌─────────┬─────────────────────────────┬────────────┬─────────┬──────────┬────────┬────────┬───────────┬──────────┐
+│ (index) │ category                    │ sev        │ AI art% │ AI chat% │ human% │ AI /1k │ human /1k │ lift     │
+├─────────┼─────────────────────────────┼────────────┼─────────┼──────────┼────────┼────────┼───────────┼──────────┤
+│ 0       │ 'tool_artifacts'            │ 'critical' │ 17      │ 0        │ 0      │ 4.95   │ 0         │ Infinity │
+│ 1       │ 'knowledge_cutoff'          │ 'high'     │ 7       │ 33       │ 0      │ 0.12   │ 0         │ Infinity │
+│ 2       │ 'collaborative_scaffolding' │ 'high'     │ 7       │ 0        │ 0      │ 0.08   │ 0         │ Infinity │
+│ 3       │ 'placeholder_text'          │ 'critical' │ 0       │ 33       │ 0      │ 0      │ 0         │ Infinity │
+│ 4       │ 'participial_tackon'        │ 'medium'   │ 24      │ 0        │ 0      │ 0.35   │ 0         │ Infinity │
+│ 5       │ 'negative_parallelism'      │ 'medium'   │ 7       │ 0        │ 0      │ 0.15   │ 0         │ Infinity │
+│ 6       │ 'challenges_and_future'     │ 'medium'   │ 3       │ 0        │ 0      │ 0.04   │ 0         │ Infinity │
+│ 7       │ 'business_jargon'           │ 'low'      │ 7       │ 0        │ 0      │ 0.08   │ 0         │ Infinity │
+│ 8       │ 'emoji_formatting'          │ 'high'     │ 0       │ 50       │ 0      │ 0      │ 0         │ Infinity │
+│ 9       │ 'formatting_tells'          │ 'medium'   │ 7       │ 0        │ 0      │ 1.15   │ 0         │ Infinity │
+│ 10      │ 'significance_statements'   │ 'medium'   │ 21      │ 0        │ 6      │ 0.23   │ 0.03      │ 7.7      │
+│ 11      │ 'ai_vocabulary'             │ 'low'      │ 59      │ 0        │ 38     │ 2.15   │ 0.31      │ 6.9      │
+│ 12      │ 'rule_of_three'             │ 'medium'   │ 83      │ 17       │ 94     │ 3.11   │ 0.71      │ 4.4      │
+│ 13      │ 'ritual_conclusion'         │ 'medium'   │ 10      │ 0        │ 6      │ 0.12   │ 0.03      │ 4        │
+│ 14      │ 'vague_attribution'         │ 'medium'   │ 14      │ 0        │ 13     │ 0.15   │ 0.06      │ 2.5      │
+│ 15      │ 'copula_avoidance'          │ 'low'      │ 41      │ 0        │ 50     │ 0.73   │ 0.46      │ 1.6      │
+│ 16      │ 'promotional_puffery'       │ 'medium'   │ 14      │ 0        │ 25     │ 0.27   │ 0.2       │ 1.4      │
+│ 17      │ 'ai_self_reference'         │ 'critical' │ 0       │ 0        │ 0      │ 0      │ 0         │ 0        │
+│ 18      │ 'editorial_hedging'         │ 'medium'   │ 0       │ 0        │ 0      │ 0      │ 0         │ 0        │
+│ 19      │ 'data_analysis_phrases'     │ 'low'      │ 0       │ 0        │ 0      │ 0      │ 0         │ 0        │
+└─────────┴─────────────────────────────┴────────────┴─────────┴──────────┴────────┴────────┴───────────┴──────────┘
+
+HIGHEST-SCORING HUMAN (2017) DOCUMENTS — these are the false positives
+   20  Kyoto
+         promotional_puffery x3  e.g. "renowned"
+         ritual_conclusion x1  e.g. ".  In the end,"
+         copula_avoidance x2  e.g. "represents the"
+   16  Coral reef
+         copula_avoidance x4  e.g. "serve as a"
+         rule_of_three x2  e.g. "waves, winds, and atmospheric"
+         ai_vocabulary x1  e.g. "robust"
+   15  Kiwifruit
+         rule_of_three x5  e.g. "Chile, Greece, and France"
+   15  Bauhaus
+         rule_of_three x2  e.g. "technique, instructors, and politics"
+         significance_statements x1  e.g. "profound influence"
+         copula_avoidance x2  e.g. "represent a"
+   14  Cologne Cathedral
+         promotional_puffery x2  e.g. "renowned"
+         copula_avoidance x2  e.g. "represent the"
+         rule_of_three x1  e.g. "wind, rain, and pollution"
+
+LOWEST-SCORING AI DOCUMENTS — these are the misses
+    3  Goebel Goe II  (354w)
+    5  Josef von Rickenbach  (276w)
+    6  Biobanks in India  (724w)
+    7  Ansuman Satpathy  (476w)
+   12  Émile Dufresne  (536w)
+
+TYPOGRAPHY
+┌─────────────────────┬─────────────────────┬─────────────────────────┐
+│ (index)             │ em dashes /1k words │ mean sentence-length CV │
+├─────────────────────┼─────────────────────┼─────────────────────────┤
+│ AI corpus           │ 2.65                │ 0.546                   │
+│ Human corpus (2017) │ 0.26                │ 0.606                   │
+└─────────────────────┴─────────────────────┴─────────────────────────┘
