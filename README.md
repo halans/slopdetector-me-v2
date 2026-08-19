@@ -35,8 +35,26 @@ matchCategory(myText, 'negative_parallelism');
 | `build-corpus.py` | fetches 16 pre-2022 Wikipedia articles (human control) |
 | `build-ai-corpus.py` | fetches Wikipedia's archived LLM-draft examples |
 | `build-chat-corpus.py` | extracts chat-register AI samples from the source page |
-| `build-page.mjs` | regenerates the article HTML from the library |
+| `build-page.mjs` | regenerates the article HTML (`public/index.html`) from the library |
 | `corpus-*.json` | the built corpora |
+
+## Article page
+
+`build-page.mjs` regenerates the long-form article at `app/public/index.html`
+from `ai-text-patterns.js`, so the category reference and worked examples on
+the page can never drift from the library itself. The "Measured results"
+numbers below are copied from `validation-report.txt`, not recomputed at
+build time — rerun [Reproduce](#reproduce) first if the corpora or library
+changed.
+
+Run from `app/`:
+
+```
+node build-page.mjs
+```
+
+`app/public/` must exist first — `writeFileSync` does not create missing
+directories. One-time setup: `mkdir -p public` (from `app/`).
 
 ## Standalone web tool
 
