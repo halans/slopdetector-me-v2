@@ -516,5 +516,5 @@ footer a:hover{text-decoration:underline}
 </body>
 </html>`;
 
-writeFileSync('index.html', html);
-console.log(`wrote index.html — ${(html.length / 1024).toFixed(1)} KB, ${CATEGORIES.length} categories, ${totalPatterns} patterns`);
+writeFileSync('public/index.html', html);
+console.log(`wrote public/index.html — ${(html.length / 1024).toFixed(1)} KB, ${CATEGORIES.length} categories, ${totalPatterns} patterns`);
