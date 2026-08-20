@@ -303,7 +303,7 @@ footer a:hover{text-decoration:underline}
       <a href="#taxonomy">Taxonomy</a>
       <a href="#validation">Validation</a>
       <a href="#limits">Limits</a>
-      <a href="https://pub.hyperagent.com/p/QEeeAx22m4-oPVFXSGkfwe5hQvB02Q7DHVEBma1svHQ" target="_blank" rel="noopener noreferrer">SlopDetector →</a>
+      <a href="https://slopdetector.me" target="_blank" rel="noopener noreferrer">SlopDetector →</a>
     </nav>
   </div>
 </header>
@@ -453,7 +453,7 @@ footer a:hover{text-decoration:underline}
     API, because the default lived in the wrong file.</p>
 
     <p style="margin-top:32px">
-      <a href="https://pub.hyperagent.com/p/QEeeAx22m4-oPVFXSGkfwe5hQvB02Q7DHVEBma1svHQ" target="_blank" rel="noopener noreferrer"
+      <a href="https://slopdetector.me" target="_blank" rel="noopener noreferrer"
          style="display:inline-block;background:var(--ink);color:#fff;text-decoration:none;
                 padding:15px 30px;border-radius:3px;font-weight:600;font-size:1.03rem;
                 letter-spacing:-.01em">Open SlopDetector →</a>
