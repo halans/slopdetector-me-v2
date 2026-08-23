@@ -46,3 +46,4 @@ Thumbs.db
 frontend/src/utils/fileProcessing.ts
 vitest-output.log
 .claude/*
+.serena/*
