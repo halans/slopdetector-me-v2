@@ -5,6 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Fingerprints of Machine Prose</title>
 <meta name="description" content="A tested regex catalogue of the surface patterns that mark English text as LLM-generated — with honest false-positive numbers.">
+<link rel="canonical" href="https://about.slopdetector.me/">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<meta name="theme-color" content="#ffffff">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="SlopDetector">
+<meta property="og:title" content="The Fingerprints of Machine Prose">
+<meta property="og:description" content="A tested regex catalogue of the surface patterns that mark English text as LLM-generated — with honest false-positive numbers.">
+<meta property="og:url" content="https://about.slopdetector.me/">
+<meta property="og:image" content="https://about.slopdetector.me/og_default.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Fingerprints of Machine Prose">
+<meta name="twitter:description" content="A tested regex catalogue of the surface patterns that mark English text as LLM-generated — with honest false-positive numbers.">
+<meta name="twitter:image" content="https://about.slopdetector.me/og_default.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
@@ -928,8 +943,8 @@ footer a:hover{text-decoration:underline}
           
         </div>
         
-        <pre class="rx"><code>/\bnot (?:just|merely|simply)\b[^.!?\n]{1,80}?[,;—-]\s*(?:it(?:'s| is)|they(?:'re| are)|but)\b/gi</code></pre>
-        <ul class="ex"><li><span>It's not just a phone — it's a platform.</span></li></ul>
+        <pre class="rx"><code>/\bnot (?:just|merely|simply)\b[^.!?\n]{1,80}?[,.;:—-]\s*(?:it(?:'s| is)|they(?:'re| are)|but)\b/gi</code></pre>
+        <ul class="ex"><li><span>It's not just a phone — it's a platform.</span></li><li><span>It's not just a tool. It's a paradigm shift.</span></li></ul>
       </div>
       <div class="pat">
         <div class="pat-head">
@@ -938,8 +953,8 @@ footer a:hover{text-decoration:underline}
           
         </div>
         
-        <pre class="rx"><code>/\bit(?:'s| is)\s+not\s+(?:about\s+)?[^.!?\n]{1,60}?[,;—-]\s*it(?:'s| is)\b/gi</code></pre>
-        <ul class="ex"><li><span>It's not about speed, it's about accuracy.</span></li></ul>
+        <pre class="rx"><code>/\bit(?:'s| is)\s+not\s+(?:about\s+)?[^.!?\n]{1,60}?[,.;:—-]\s*it(?:'s| is)\b/gi</code></pre>
+        <ul class="ex"><li><span>It's not about speed, it's about accuracy.</span></li><li><span>It's not simply a design choice. It's a fundamental philosophy.</span></li></ul>
       </div>
       <div class="pat">
         <div class="pat-head">
@@ -957,9 +972,9 @@ footer a:hover{text-decoration:underline}
           
           
         </div>
-        <p class="pat-note">Em-dash-joined variant.</p>
-        <pre class="rx"><code>/\b(?:this|that|it|there)\s+(?:is|was)\s?n(?:'|o)t\s+[^.!?\n]{1,60}?[—-]\s*(?:it(?:'s| is)|that(?:'s| is))\b/gi</code></pre>
-        <ul class="ex"><li><span>This isn't a setback — it's a redirection.</span></li></ul>
+        <p class="pat-note">Dash, comma, colon, or sentence-boundary joined variant.</p>
+        <pre class="rx"><code>/\b(?:this|that|it|there)\s+(?:is|was)\s?n(?:'|o)t\s+[^.!?\n]{1,60}?[,.;:—-]\s*(?:it(?:'s| is)|that(?:'s| is))\b/gi</code></pre>
+        <ul class="ex"><li><span>This isn't a setback — it's a redirection.</span></li><li><span>This isn't a setback. It's a redirection.</span></li></ul>
       </div>
       <div class="pat">
         <div class="pat-head">
