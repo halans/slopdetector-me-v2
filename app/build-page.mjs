@@ -537,7 +537,7 @@ footer a:hover{text-decoration:underline}
 </div>
 
 <section id="mechanism">
-  <div class="wrap narrow">
+  <div class="wrap">
     <div class="sec-label">01 — Mechanism</div>
     <h2 class="big">Why the house style exists</h2>
     <p class="lede">The tells are not random. Each family of them traces back to something specific in how these models are built and served.</p>
@@ -570,7 +570,7 @@ footer a:hover{text-decoration:underline}
 </section>
 
 <section id="validation">
-  <div class="wrap narrow">
+  <div class="wrap">
     <div class="sec-label">03 — Validation</div>
     <h2 class="big">What it actually catches</h2>
     <p class="lede">Claims about detection are cheap. These are measured numbers from a run you can reproduce with the code below.</p>
@@ -622,7 +622,7 @@ footer a:hover{text-decoration:underline}
 </section>
 
 <section id="limits">
-  <div class="wrap narrow">
+  <div class="wrap">
     <div class="sec-label">04 — Limits</div>
     <h2 class="big">Why detection keeps failing</h2>
 
@@ -645,7 +645,7 @@ footer a:hover{text-decoration:underline}
 </section>
 
 <section id="tool">
-  <div class="wrap narrow">
+  <div class="wrap">
     <div class="sec-label">05 — The tool</div>
     <h2 class="big">SlopDetector</h2>
     <p class="lede">Everything above, as something you can actually use. Paste prose and every
@@ -660,7 +660,7 @@ footer a:hover{text-decoration:underline}
     API, because the default lived in the wrong file.</p>
 
     <p style="margin-top:32px">
-      <a href="https://slopdetector.me" target="_blank" rel="noopener noreferrer"
+      <a href="https://slopdetector.me" rel="me"
          style="display:inline-block;background:var(--ink);color:#fff;text-decoration:none;
                 padding:15px 30px;border-radius:3px;font-weight:600;font-size:1.03rem;
                 letter-spacing:-.01em">Open SlopDetector →</a>
