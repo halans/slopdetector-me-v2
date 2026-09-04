@@ -233,7 +233,7 @@ every surface reads them.
 ```yaml
 # .pre-commit-config.yaml
 repos:
-  - repo: https://github.com/halans/ai-text-patterns
+  - repo: https://github.com/halans/slopdetector-me-v2
     rev: v2.0.0
     hooks:
       - id: ai-text-patterns-strict   # critical artifacts only, safe hard gate

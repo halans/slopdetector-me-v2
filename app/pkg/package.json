@@ -59,9 +59,9 @@
   "dependencies": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/halans/ai-text-patterns.git"
+    "url": "git+https://github.com/halans/slopdetector-me-v2.git"
   },
   "bugs": {
-    "url": "https://github.com/halans/ai-text-patterns/issues"
+    "url": "https://github.com/halans/slopdetector-me-v2/issues"
   }
 }

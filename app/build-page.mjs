@@ -683,7 +683,7 @@ footer a:hover{text-decoration:underline}
     <p>The CLI exits <code>0</code> clean, <code>1</code> on a lint failure and <code>2</code> on a
     config error, so a broken config never masquerades as a prose problem. Critical-tier rules
     (the vendor citation artifacts) are the only ones worth gating a build on.</p>
-    <p>Find it on <a href="https://github.com/halans/ai-pattern-detection" target="_blank" rel="noopener noreferrer">Github</a></p>
+    <p>Find it on <a href="https://github.com/halans/slopdetector-me-v2" target="_blank" rel="noopener noreferrer">Github</a></p>
   </div>
 </section>
 
