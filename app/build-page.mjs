@@ -81,7 +81,7 @@ const cards = [...CATEGORIES]
       <p class="why"><strong>Why it happens.</strong> ${esc(cat.why)}</p>
       <p class="caution"><strong>False positives.</strong> ${esc(cat.caution)}</p>
       <details class="pats">
-        <summary>${cat.patterns.length} pattern${cat.patterns.length > 1 ? 's' : ''} · ${cat.weight} pts each, capped at ${cat.cap}</summary>
+        <summary>${cat.patterns.length} pattern${cat.patterns.length > 1 ? 's' : ''} &bull; ${cat.weight} pts each, capped at ${cat.cap}</summary>
         ${pats}
       </details>
     </article>`;
@@ -118,7 +118,7 @@ const mdCards = [...CATEGORIES]
     const m = MEASURED[cat.id] || {};
     const pats = cat.patterns.map((p) => {
       const lines = [
-        `- \`${p.id}\`${p.vendor ? ` (${p.vendor})` : ''}${p.era ? ` · ${p.era}` : ''}`
+        `- \`${p.id}\`${p.vendor ? ` (${p.vendor})` : ''}${p.era ? ` &bull; ${p.era}` : ''}`
       ];
       if (p.note) lines.push(`  ${mdEscape(p.note)}`);
       lines.push(`  \`${String(p.re)}\``);
@@ -131,13 +131,13 @@ const mdCards = [...CATEGORIES]
     return [
       `### [${cat.severity}] ${mdEscape(cat.label)} \`${cat.id}\``,
       '',
-      `AI /1k words: ${m.ai ?? '—'} · human /1k: ${m.hu ?? '—'} · lift: ${liftLabel(cat.id)}`,
+      `AI /1k words: ${m.ai ?? '—'} &bull; human /1k: ${m.hu ?? '—'} &bull; lift: ${liftLabel(cat.id)}`,
       '',
       `**Why it happens.** ${mdEscape(cat.why)}`,
       '',
       `**False positives.** ${mdEscape(cat.caution)}`,
       '',
-      `${cat.patterns.length} pattern${cat.patterns.length > 1 ? 's' : ''} · ${cat.weight} pts each, capped at ${cat.cap}:`,
+      `${cat.patterns.length} pattern${cat.patterns.length > 1 ? 's' : ''} &bull; ${cat.weight} pts each, capped at ${cat.cap}:`,
       '',
       pats
     ].join('\n');
@@ -147,11 +147,11 @@ const md = `# The Fingerprints of Machine Prose
 
 _A tested regex catalogue of the surface patterns that mark English text as LLM-generated, with honest false-positive numbers._
 
-Computational stylistics · ${totalPatterns} patterns · ${CATEGORIES.length} categories
+Computational stylistics &bull; ${totalPatterns} patterns &bull; ${CATEGORIES.length} categories
 
 Large language models have a house style. It is measurable, it is documented in the peer-reviewed literature, and a good deal of it can be caught with regular expressions. Here is the full catalogue, the JavaScript to run it, and the false-positive numbers nobody publishing an "AI detector" wants to show you.
 
-Corpus: **63,143 words** · Human control: **frozen Dec 2017** · Self-test: **101/101** · License: **CC BY-NC-SA 4.0**
+Corpus: **63,143 words** &bull; Human control: **frozen Dec 2017** &bull; Self-test: **101/101** &bull; License: **CC BY-NC-SA 4.0**
 
 ## Read this before you use any of it
 
@@ -161,7 +161,7 @@ The distinction is not pedantic. In 2023 Liang and colleagues ran seven commerci
 
 Use these patterns to reread your own sentences. Do not use them to accuse anybody of anything.
 
-## 01 · Mechanism: Why the house style exists
+## 01 — Mechanism: Why the house style exists
 
 The tells are not random. Each family of them traces back to something specific in how these models are built and served.
 
@@ -183,13 +183,13 @@ These systems are trained and served in Markdown. Most of that formatting is vis
 
 The highest-precision signals are not stylistic at all. They are machine artifacts: the internal citation markup a chatbot renders into its own web UI, copied out along with the text. ChatGPT leaves \`:contentReference[oaicite:16]\` and \`citeturn0search1\`. Gemini leaves \`[cite: 17]\` and \`[span_2](start_span)\`. Grok leaves \`<grok-card data-id=…>\`. DeepSeek leaves \`【85†L261-269】\`. Perplexity leaves \`[attached_file:1]\`. None of these is a writing habit. Each is proof that a specific product was in the loop.
 
-## 02 · Taxonomy: ${CATEGORIES.length} categories, ${totalPatterns} patterns
+## 02 — Taxonomy: ${CATEGORIES.length} categories, ${totalPatterns} patterns
 
 Ordered by severity. **Critical** means a machine artifact that a human typing prose essentially never produces. **Low** means an ordinary English word that is meaningless alone and only informative as density. Every regex below is the live source from the library, and every listed example is asserted in the test suite.
 
 ${mdCards}
 
-## 03 · Validation: What it actually catches
+## 03 — Validation: What it actually catches
 
 Claims about detection are cheap. These are measured numbers from a run you can reproduce with the code in the repository.
 
@@ -231,7 +231,7 @@ Three-item lists fire in **94% of the human documents** and 83% of the AI ones. 
 
 Three categories (model self-identification, editorialising hedges, and analysis-report register) recorded zero hits in _both_ corpora. They are not broken; their unit examples all pass. They are simply absent from Wikipedia-register text, because nobody leaves "As an AI language model" in an encyclopedia draft they are trying to get past reviewers, and encyclopedias do not say "the data paints a clear picture". Those three rest on documented examples alone, and are marked as such rather than quietly presented as validated.
 
-## 04 · Limits: Why detection keeps failing
+## 04 — Limits: Why detection keeps failing
 
 The industry's own numbers are the strongest argument against trusting any of this as evidence. OpenAI shipped an AI Text Classifier in January 2023 and withdrew it that July, citing low accuracy; its published figures were a **26% true-positive rate at a 9% false-positive rate**: a tool that missed three-quarters of machine text while wrongly accusing nearly one human document in eleven. Turnitin, which is still deployed at scale in education, states under 1% false positives at the document level but roughly **4% at the sentence level**. Weber-Wulff and colleagues tested fourteen tools in 2023 and concluded they were "neither accurate nor reliable", with detection degrading sharply on paraphrased, human-edited, or translated text.
 
@@ -249,7 +249,7 @@ It also decays because it is adversarial. Once a tell becomes notorious, it gets
 >
 > **What it is not good for.** Grading students. Screening job applicants. Moderation decisions. Anything where a person bears a cost for being wrongly flagged.
 
-## 05 · The tool: SlopDetector
+## 05 — The tool: SlopDetector
 
 Everything above, as something you can actually use. Paste prose and every match is highlighted in place; click one to see which rule fired, why models produce it, and how it earns false positives.
 
@@ -536,7 +536,7 @@ footer a:hover{text-decoration:underline}
 
 <div class="wrap">
   <div class="hero">
-    <div class="kicker">Computational stylistics · ${totalPatterns} patterns · ${CATEGORIES.length} categories</div>
+    <div class="kicker">Computational stylistics · ${totalPatterns} patterns &bull; ${CATEGORIES.length} categories</div>
     <h1>The fingerprints of machine prose</h1>
     <p class="standfirst">Large language models have a house style. It is measurable, it is documented in the peer-reviewed literature, and a good deal of it can be caught with regular expressions. Here is the full catalogue, the JavaScript to run it, and the false-positive numbers nobody publishing an "AI detector" wants to show you.</p>
     <div class="hero-meta">
@@ -735,6 +735,7 @@ footer a:hover{text-decoration:underline}
     </div>
     <div class="colophon">
       Pattern catalogue derived from Wikipedia:Signs of AI writing, used under CC BY-NC-SA 4.0; this page and the library carry the same licence. Measurements were produced on a corpus of 63,143 words and should be read as indicative of that corpus, not as general accuracy claims.
+      <br>2026 &bull; <a href="llms.txt">llms.txt</a>
     </div>
   </div>
 </footer>
