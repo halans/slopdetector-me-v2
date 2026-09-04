@@ -510,7 +510,7 @@ footer a:hover{text-decoration:underline}
       <a href="#taxonomy">Taxonomy</a>
       <a href="#validation">Validation</a>
       <a href="#limits">Limits</a>
-      <a href="https://slopdetector.me" target="_blank" rel="noopener noreferrer">SlopDetector →</a>
+      <a href="https://slopdetector.me" rel="me">SlopDetector →</a>
     </nav>
   </div>
 </header>
