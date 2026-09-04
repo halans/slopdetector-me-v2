@@ -94,6 +94,24 @@ const toc = [...CATEGORIES]
 
 const totalPatterns = CATEGORIES.reduce((a, c) => a + c.patterns.length, 0);
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'The Fingerprints of Machine Prose',
+  description: 'A tested regex catalogue of the surface patterns that mark English text as LLM-generated, with honest false-positive numbers.',
+  image: ['https://about.slopdetector.me/og_default.jpg'],
+  url: 'https://about.slopdetector.me/',
+  mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://about.slopdetector.me/' },
+  inLanguage: 'en',
+  isAccessibleForFree: true,
+  license: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+  dateModified: new Date().toISOString(),
+  author: { '@type': 'Organization', name: 'SlopDetector', url: 'https://slopdetector.me' },
+  publisher: { '@type': 'Organization', name: 'SlopDetector', url: 'https://slopdetector.me' },
+  isPartOf: { '@type': 'WebSite', name: 'SlopDetector', url: 'https://slopdetector.me' }
+};
+const jsonLdScript = `<script type="application/ld+json">${JSON.stringify(jsonLd, null, 2).replace(/</g, '\\u003c')}</script>`;
+
 const mdCards = [...CATEGORIES]
   .sort((a, b) => SEV_ORDER[a.severity] - SEV_ORDER[b.severity])
   .map((cat) => {
@@ -306,6 +324,7 @@ const html = `<!DOCTYPE html>
 <meta name="twitter:title" content="The Fingerprints of Machine Prose">
 <meta name="twitter:description" content="A tested regex catalogue of the surface patterns that mark English text as LLM-generated, with honest false-positive numbers.">
 <meta name="twitter:image" content="https://about.slopdetector.me/og_default.jpg">
+${jsonLdScript}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
