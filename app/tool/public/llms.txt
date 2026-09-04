@@ -1,0 +1,11 @@
+# SlopDetector
+
+> A style linter for LLM-generated prose: paste text, see which patterns characteristic of machine writing it triggers, and where. Runs entirely in the browser — no text is uploaded, stored, or logged. 20 categories, 95 regex patterns, validated against a human control corpus with honest false-positive numbers.
+
+This is a style linter, not an authorship detector. It finds writing habits that language models exhibit more often than most human writers, nothing more. Do not use it, or its output, to accuse anyone of anything.
+
+## Docs
+
+- [The research behind it](https://about.slopdetector.me/): the full pattern catalogue, methodology, and validation numbers this tool is built from.
+- [Markdown version of the research](https://about.slopdetector.me/index.md): the same content as plain markdown, for easier ingestion.
+- [GitHub repository](https://github.com/halans/slopdetector-me-v2): source for the tool, the pattern library, and the research harness.

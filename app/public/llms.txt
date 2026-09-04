@@ -1,0 +1,12 @@
+# The Fingerprints of Machine Prose
+
+> A tested regex catalogue of the surface patterns that mark English text as LLM-generated, with honest false-positive numbers. Covers why the patterns exist, all 20 categories and 95 patterns with live regex source, measured validation results (66% recall / 0% false positives at threshold 25 on a 63,143-word corpus), and the documented limits of AI-text detection as a category of tool.
+
+This is a style-linting catalogue, not an authorship detector. See the Limits section before using any of it to draw conclusions about a specific document or writer.
+
+## Docs
+
+- [Full article (HTML)](https://about.slopdetector.me/): the complete essay with interactive category cards.
+- [Full article (Markdown)](https://about.slopdetector.me/index.md): the same content as plain markdown, better suited for LLM ingestion.
+- [SlopDetector](https://slopdetector.me/): the interactive linter built from this catalogue.
+- [GitHub repository](https://github.com/halans/slopdetector-me-v2): source, pattern library, and research harness (corpora, validation script, raw results).

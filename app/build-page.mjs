@@ -44,6 +44,8 @@ const liftLabel = (id) => {
   return `${(m.ai / m.hu).toFixed(1)}×`;
 };
 
+const mdEscape = (s) => String(s).replace(/([_*`[\]])/g, '\\$1');
+
 const cards = [...CATEGORIES]
   .sort((a, b) => SEV_ORDER[a.severity] - SEV_ORDER[b.severity])
   .map((cat) => {
@@ -92,6 +94,195 @@ const toc = [...CATEGORIES]
 
 const totalPatterns = CATEGORIES.reduce((a, c) => a + c.patterns.length, 0);
 
+const mdCards = [...CATEGORIES]
+  .sort((a, b) => SEV_ORDER[a.severity] - SEV_ORDER[b.severity])
+  .map((cat) => {
+    const m = MEASURED[cat.id] || {};
+    const pats = cat.patterns.map((p) => {
+      const lines = [
+        `- \`${p.id}\`${p.vendor ? ` (${p.vendor})` : ''}${p.era ? ` — ${p.era}` : ''}`
+      ];
+      if (p.note) lines.push(`  ${mdEscape(p.note)}`);
+      lines.push(`  \`${String(p.re)}\``);
+      if ((p.examples || []).length) {
+        lines.push(`  Examples: ${p.examples.map((e) => `\`${e}\``).join(', ')}`);
+      }
+      return lines.join('\n');
+    }).join('\n');
+
+    return [
+      `### [${cat.severity}] ${mdEscape(cat.label)} \`${cat.id}\``,
+      '',
+      `AI /1k words: ${m.ai ?? '—'} · human /1k: ${m.hu ?? '—'} · lift: ${liftLabel(cat.id)}`,
+      '',
+      `**Why it happens.** ${mdEscape(cat.why)}`,
+      '',
+      `**False positives.** ${mdEscape(cat.caution)}`,
+      '',
+      `${cat.patterns.length} pattern${cat.patterns.length > 1 ? 's' : ''} · ${cat.weight} pts each, capped at ${cat.cap}:`,
+      '',
+      pats
+    ].join('\n');
+  }).join('\n\n');
+
+const md = `# The Fingerprints of Machine Prose
+
+_A tested regex catalogue of the surface patterns that mark English text as LLM-generated — with honest false-positive numbers._
+
+Computational stylistics · ${totalPatterns} patterns · ${CATEGORIES.length} categories
+
+Large language models have a house style. It is measurable, it is documented in the peer-reviewed literature, and a good deal of it can be caught with regular expressions. Here is the full catalogue, the JavaScript to run it, and the false-positive numbers nobody publishing an "AI detector" wants to show you.
+
+Corpus: **63,143 words** · Human control: **frozen Dec 2017** · Self-test: **101/101** · License: **CC BY-NC-SA 4.0**
+
+## Read this before you use any of it
+
+This is a **style linter**, not an authorship detector. It finds writing habits that language models exhibit more often than most human writers. That is all it does.
+
+The distinction is not pedantic. In 2023 Liang and colleagues ran seven commercial GPT detectors over 91 TOEFL essays written by humans. The detectors flagged **61.22%** of them as machine-written, against 5.19% for essays by US eighth-graders. **97.8%** of the human TOEFL essays were flagged by at least one detector. The mechanism is simple and it is baked into every tool of this kind, including this one: writing in a careful, formal, limited-vocabulary register looks exactly like what these systems are trained to punish.
+
+Use these patterns to reread your own sentences. Do not use them to accuse anybody of anything.
+
+## 01 — Mechanism: Why the house style exists
+
+The tells are not random. Each family of them traces back to something specific in how these models are built and served.
+
+### Frequency regression
+
+A language model samples from a probability distribution over tokens. Averaged across millions of generations, its output drifts toward whatever was statistically common in training, then further toward whatever human raters rewarded. Specific facts get replaced by generic, positive-sounding description because generic description is what the distribution says comes next.
+
+The measured effect is large. Kobak and colleagues compared 15.1 million PubMed abstracts against frequencies extrapolated from pre-ChatGPT trends. In 2024, _delves_ appeared at **28 times** its expected rate. They counted **454 excess words** that year, against a previous record of 190 at the peak of the COVID-19 pandemic — and where the pandemic's excess words were topic nouns, 2024's were overwhelmingly _style_ words: 66% verbs, 14% adjectives. Juzek and Ward, working on scientific abstracts, put the pre/post ratio for _delving_ at roughly 2,240× and _showcasing_ at 1,396×.
+
+### Reinforcement learning rewards a register
+
+Instruction tuning teaches the model to be helpful, balanced, and complete. Those are conversational virtues, and they produce conversational artifacts: the acknowledgement before the answer, the hedge that reminds you results may vary, the summary paragraph that closes a section you have just finished reading. Juzek and Ward found that learning from human feedback _amplifies_ frequency biases already present in pre-training, rather than smoothing them out.
+
+### Markdown leaking into prose
+
+These systems are trained and served in Markdown. Most of that formatting is visibly structural — headings, bullets, bold — and gets stripped or noticed when text is moved somewhere else. The em dash is the exception: it is simultaneously a Markdown-era typographic habit and a legitimate piece of prose punctuation, so it survives the move. In our own corpus the gap is stark, **2.65 em dashes per thousand words in LLM text against 0.26 in the human control**, a tenfold difference. But this signal is decaying fastest of all: OpenAI explicitly tuned GPT-5.1 to suppress em dashes in late 2025, and by July 2026 _The Economist_ reported that among current models only Claude used them more than professional human writers.
+
+### The interface bleeds through
+
+The highest-precision signals are not stylistic at all. They are machine artifacts — the internal citation markup a chatbot renders into its own web UI, copied out along with the text. ChatGPT leaves \`:contentReference[oaicite:16]\` and \`citeturn0search1\`. Gemini leaves \`[cite: 17]\` and \`[span_2](start_span)\`. Grok leaves \`<grok-card data-id=…>\`. DeepSeek leaves \`【85†L261-269】\`. Perplexity leaves \`[attached_file:1]\`. None of these is a writing habit. Each is proof that a specific product was in the loop.
+
+## 02 — Taxonomy: ${CATEGORIES.length} categories, ${totalPatterns} patterns
+
+Ordered by severity. **Critical** means a machine artifact that a human typing prose essentially never produces. **Low** means an ordinary English word that is meaningless alone and only informative as density. Every regex below is the live source from the library, and every listed example is asserted in the test suite.
+
+${mdCards}
+
+## 03 — Validation: What it actually catches
+
+Claims about detection are cheap. These are measured numbers from a run you can reproduce with the code in the repository.
+
+Three corpora. The **AI article** set is 29 documented LLM outputs that Wikipedia editors archived as evidence when cleaning up machine-written drafts — real chatbot text that a real person pasted into a real encyclopedia. The **AI chat** set is 6 shorter samples in conversational register, from the same archive. The **human control** is 16 Wikipedia articles as they stood in December 2017, more than four years before ChatGPT shipped: same genre, same encyclopedic register, guaranteed pre-LLM.
+
+**Score distribution**
+
+| Corpus | n | words | mean | median | min | max |
+|---|---:|---:|---:|---:|---:|---:|
+| AI, article register | 29 | 26,863 | 34.0 | 31 | 3 | 87 |
+| AI, chat register | 6 | 778 | 55.5 | 62 | 29 | 66 |
+| Human, Wikipedia Dec 2017 | 16 | 35,502 | 9.9 | 9 | 4 | 20 |
+
+The separation is real but the overlap matters more than the gap. No human document scored above 20. The lowest-scoring AI document scored 3.
+
+**Threshold sweep — AI article corpus vs human control**
+
+| Threshold | Recall | False positives | Precision |
+|---:|---:|---:|---:|
+| 15 | 83% | 25% | 86% |
+| 25 | 66% | 0% | 100% |
+| 35 | 38% | 0% | 100% |
+| 45 | 21% | 0% | 100% |
+| 65 | 17% | 0% | 100% |
+
+> **Read that table honestly.** A threshold clean enough to produce zero false positives on 16 human documents still misses a third of known machine text. Push recall to 83% and one human article in four gets flagged. There is no setting that is both safe and thorough, and this is on a tiny, favourable, single-genre corpus.
+
+### The signal that did not survive contact with data
+
+"Burstiness" — the idea that humans vary sentence length far more than machines — is the most widely repeated heuristic in this space and a documented input to commercial detectors. On this corpus it does nothing. Mean coefficient of variation in sentence length came out at **0.546 for the AI text and 0.606 for the human text**: a difference in the predicted direction, far too small to separate anything, and swamped by genre. Encyclopedic prose is uniform whoever writes it.
+
+The em dash, by contrast, held up: **2.65 per thousand words versus 0.26**. So did the machine artifacts, at infinite lift — they appear in 17% of the AI documents and zero human ones, which is what you would expect of a signal that is not about writing at all.
+
+### The noisiest category, and why it stays in
+
+Three-item lists fire in **94% of the human documents** and 83% of the AI ones. Measured by document presence the category is worse than useless. Measured by density it still carries a 4.4× lift, because the AI text stacks triads at 3.11 per thousand words against 0.71. It is kept, weighted low, capped hard, and labelled as the highest false-positive family in the file. That is the honest treatment of a weak signal: keep it visible, never let it drive a verdict.
+
+### What the corpus could not test
+
+Three categories — model self-identification, editorialising hedges, and analysis-report register — recorded zero hits in _both_ corpora. They are not broken; their unit examples all pass. They are simply absent from Wikipedia-register text, because nobody leaves "As an AI language model" in an encyclopedia draft they are trying to get past reviewers, and encyclopedias do not say "the data paints a clear picture". Those three rest on documented examples alone, and are marked as such rather than quietly presented as validated.
+
+## 04 — Limits: Why detection keeps failing
+
+The industry's own numbers are the strongest argument against trusting any of this as evidence. OpenAI shipped an AI Text Classifier in January 2023 and withdrew it that July, citing low accuracy; its published figures were a **26% true-positive rate at a 9% false-positive rate** — a tool that missed three-quarters of machine text while wrongly accusing nearly one human document in eleven. Turnitin, which is still deployed at scale in education, states under 1% false positives at the document level but roughly **4% at the sentence level**. Weber-Wulff and colleagues tested fourteen tools in 2023 and concluded they were "neither accurate nor reliable", with detection degrading sharply on paraphrased, human-edited, or translated text.
+
+Then there is the bias, which is not a bug to be patched. Liang's TOEFL study found that running the human-written essays through ChatGPT to "enhance word choices to sound more like a native speaker" dropped their false-positive rate from 61.22% to **11.77%**. Running the reverse experiment — simplifying American students' essays to sound non-native — pushed their false-positive rate from 5.19% to **56.65%**. The detectors were not finding machines. They were finding low-perplexity prose, which is what you write when you are working carefully in your second language.
+
+Every category in this file inherits that flaw, and the vocabulary category is where it bites hardest. Formal register, restricted synonym range, careful connectives: this is what good non-native academic English looks like, and it is also what the model does.
+
+### The target moves
+
+Wikipedia's editors track which words cluster in which model era. Their breakdown: _delve, tapestry, testament, pivotal, meticulous, intricate_ for GPT-4 through mid-2024; _align with, showcase, foster, enhance, vibrant_ for the GPT-4o period; _emphasising, highlighting, showcasing_ from mid-2025. _Delve_ itself, the most famous tell of all, dropped off sharply during 2025. The library tags patterns by era for this reason. Any wordlist of this kind is a photograph of a particular season of model releases, and it starts decaying the day it is written.
+
+It also decays because it is adversarial. Once a tell becomes notorious, it gets tuned out — as happened to the em dash in GPT-5.1. The signals that survive are the ones nobody is optimising against, which is precisely why the vendor citation artifacts are the most durable category here and the vocabulary list is the least.
+
+> **What this is good for.** Linting your own drafts before you publish. Reviewing a pull request against a house style guide. Feeding the pattern list to a model as instructions for what not to write. Getting a fast second opinion on prose that feels off, before you reread it properly yourself.
+>
+> **What it is not good for.** Grading students. Screening job applicants. Moderation decisions. Anything where a person bears a cost for being wrongly flagged.
+
+## 05 — The tool: SlopDetector
+
+Everything above, as something you can actually use. Paste prose and every match is highlighted in place; click one to see which rule fired, why models produce it, and how it earns false positives.
+
+It runs entirely in your browser — no upload, no logging, verifiable in view-source. The engine is not a reimplementation: the page is generated by a build step that inlines the same two modules the command-line linter and the HTTP API import, so all three surfaces return identical findings for identical input. That equivalence is asserted by a test, which is how a real discrepancy surfaced: one rule shipped disabled in the CLI and enabled in the API, because the default lived in the wrong file.
+
+**[Open SlopDetector →](https://slopdetector.me)**
+
+### Or run it yourself
+
+The catalogue ships as a zero-dependency npm package with a CLI, an ESLint-style config, a pre-commit hook, and an HTTP API you can deploy to Cloudflare Workers or run locally.
+
+| Surface | Command | For |
+|---|---|---|
+| Browser | \`SlopDetector\` | Reading a draft, exploring the rules |
+| CLI | \`npx slop "docs/**/*.md"\` | Pre-commit hooks, CI gates, editors |
+| API | \`npx -p ai-text-patterns slop-serve\` | Other apps, pipelines, deployment |
+
+The CLI exits \`0\` clean, \`1\` on a lint failure and \`2\` on a config error, so a broken config never masquerades as a prose problem. Critical-tier rules — the vendor citation artifacts — are the only ones worth gating a build on.
+
+## Sources
+
+1. [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing), WikiProject AI Cleanup. The most complete public catalogue, continuously updated.
+2. Kobak, González-Márquez, Horvát & Lause. [Delving into LLM-assisted writing in biomedical publications through excess vocabulary](https://www.science.org/doi/10.1126/sciadv.adt3813). _Science Advances_ 11(27), 2025.
+3. Juzek & Ward. [Why Does ChatGPT "Delve" So Much?](https://arxiv.org/abs/2412.11385) Findings of ACL, 2025.
+4. Liang, Yüksekgönül, Mao, Wu & Zou. [GPT detectors are biased against non-native English writers](https://www.cell.com/patterns/fulltext/S2666-3899(23)00130-7). _Patterns_ 4(7), 2023.
+5. Russell, Karpinska & Iyyer. [People who frequently use ChatGPT for writing tasks are accurate and robust detectors of AI-generated text](https://aclanthology.org/2025.acl-long.267/). ACL, 2025.
+6. Weber-Wulff et al. [Testing of Detection Tools for AI-Generated Text](https://arxiv.org/abs/2306.15666), 2023.
+7. Merrill, Chen & Kumer. [What are the clues that ChatGPT wrote something?](https://www.washingtonpost.com/technology/interactive/2025/how-detect-chatgpt-em-dash/) _The Washington Post_, 13 Nov 2025.
+8. [How to spot AI writing](https://www.economist.com/culture/2026/07/30/how-to-spot-ai-writing). _The Economist_, 30 Jul 2026.
+9. [Understanding the false positive rate for sentences](https://www.turnitin.com/blog/understanding-the-false-positive-rate-for-sentences-of-our-ai-writing-detection-capability). Turnitin, 14 Jun 2023.
+10. [Anti-AI Writing Guide for Robots](https://aiwritingguide.misterburton.com) — a machine-readable rendering of the Wikipedia catalogue, exportable as a system prompt.
+
+## Method
+
+Human control: 16 English Wikipedia articles retrieved at their last revision before 1 January 2018 via the MediaWiki API, wikitext stripped to prose. AI corpora: the 29 archived subpages of \`Wikipedia:Signs of AI writing/Examples\` exceeding 250 words, plus 6 chat-register excerpts quoted in the parent page. Scoring counts distinct surface forms per category, weights by severity, caps per category, and normalises toward a 500-word reference length. Code blocks are stripped before matching. Typography metrics run on raw text before Unicode folding.
+
+## Reproducing
+
+The bundle contains the \`ai-text-patterns\` npm package (library, CLI, four reporters, HTTP API, 64 tests), the SlopDetector page and its build step, plus the research harness: \`build-corpus.py\` and \`build-ai-corpus.py\` for corpus construction, \`validate.mjs\` for the run that produced every number on this page, and \`validation-report.txt\` as its raw output.
+
+---
+
+Pattern catalogue derived from Wikipedia:Signs of AI writing, used under CC BY-NC-SA 4.0; this page and the library carry the same licence. Measurements were produced on a corpus of 63,143 words and should be read as indicative of that corpus, not as general accuracy claims.
+
+Full interactive version: https://about.slopdetector.me/
+Try the tool: https://slopdetector.me/
+`;
+
+writeFileSync('public/index.md', md);
+console.log(`wrote public/index.md — ${(md.length / 1024).toFixed(1)} KB`);
+
 const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -100,6 +291,7 @@ const html = `<!DOCTYPE html>
 <title>The Fingerprints of Machine Prose</title>
 <meta name="description" content="A tested regex catalogue of the surface patterns that mark English text as LLM-generated — with honest false-positive numbers.">
 <link rel="canonical" href="https://about.slopdetector.me/">
+<link rel="alternate" type="text/markdown" href="https://about.slopdetector.me/index.md">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <meta name="theme-color" content="#ffffff">
 <meta property="og:type" content="article">
