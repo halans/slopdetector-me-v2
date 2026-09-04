@@ -160,7 +160,7 @@ export const CATEGORIES = [
       'chatbot answer out of the web UI. Each vendor has its own signature.',
     caution:
       'Almost none. The only realistic false positive is an article that ' +
-      'quotes these markers while discussing AI detection — such as this one.',
+      'quotes these markers while discussing AI detection, such as this one.',
     patterns: [
       {
         id: 'openai_citation_markup',
@@ -341,7 +341,7 @@ export const CATEGORIES = [
       'they have no function inside a finished document.',
     caution:
       'Genuine correspondence, teaching material, and newsletters legitimately ' +
-      'address a reader. Weigh by genre — an encyclopedia entry should have none.',
+      'address a reader. Weigh by genre: an encyclopedia entry should have none.',
     patterns: [
       {
         id: 'hope_this_helps',

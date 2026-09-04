@@ -289,7 +289,7 @@ footer a:hover{color:var(--accent)}
 /* ===================================================================
  * SlopDetector engine — inlined verbatim from the ai-text-patterns
  * npm package at build time. Do not edit here; edit pkg/src/ and rerun
- * tool/build-tool.mjs. Generated 2026-09-04T22:36:41.878Z
+ * tool/build-tool.mjs. Generated 2026-09-04T22:52:38.860Z
  * =================================================================== */
 /**
  * ai-text-patterns.js
@@ -453,7 +453,7 @@ const CATEGORIES = [
       'chatbot answer out of the web UI. Each vendor has its own signature.',
     caution:
       'Almost none. The only realistic false positive is an article that ' +
-      'quotes these markers while discussing AI detection — such as this one.',
+      'quotes these markers while discussing AI detection, such as this one.',
     patterns: [
       {
         id: 'openai_citation_markup',
@@ -634,7 +634,7 @@ const CATEGORIES = [
       'they have no function inside a finished document.',
     caution:
       'Genuine correspondence, teaching material, and newsletters legitimately ' +
-      'address a reader. Weigh by genre — an encyclopedia entry should have none.',
+      'address a reader. Weigh by genre: an encyclopedia entry should have none.',
     patterns: [
       {
         id: 'hope_this_helps',

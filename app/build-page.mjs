@@ -100,7 +100,7 @@ const mdCards = [...CATEGORIES]
     const m = MEASURED[cat.id] || {};
     const pats = cat.patterns.map((p) => {
       const lines = [
-        `- \`${p.id}\`${p.vendor ? ` (${p.vendor})` : ''}${p.era ? ` — ${p.era}` : ''}`
+        `- \`${p.id}\`${p.vendor ? ` (${p.vendor})` : ''}${p.era ? ` · ${p.era}` : ''}`
       ];
       if (p.note) lines.push(`  ${mdEscape(p.note)}`);
       lines.push(`  \`${String(p.re)}\``);
@@ -127,7 +127,7 @@ const mdCards = [...CATEGORIES]
 
 const md = `# The Fingerprints of Machine Prose
 
-_A tested regex catalogue of the surface patterns that mark English text as LLM-generated — with honest false-positive numbers._
+_A tested regex catalogue of the surface patterns that mark English text as LLM-generated, with honest false-positive numbers._
 
 Computational stylistics · ${totalPatterns} patterns · ${CATEGORIES.length} categories
 
@@ -143,7 +143,7 @@ The distinction is not pedantic. In 2023 Liang and colleagues ran seven commerci
 
 Use these patterns to reread your own sentences. Do not use them to accuse anybody of anything.
 
-## 01 — Mechanism: Why the house style exists
+## 01 · Mechanism: Why the house style exists
 
 The tells are not random. Each family of them traces back to something specific in how these models are built and served.
 
@@ -151,7 +151,7 @@ The tells are not random. Each family of them traces back to something specific 
 
 A language model samples from a probability distribution over tokens. Averaged across millions of generations, its output drifts toward whatever was statistically common in training, then further toward whatever human raters rewarded. Specific facts get replaced by generic, positive-sounding description because generic description is what the distribution says comes next.
 
-The measured effect is large. Kobak and colleagues compared 15.1 million PubMed abstracts against frequencies extrapolated from pre-ChatGPT trends. In 2024, _delves_ appeared at **28 times** its expected rate. They counted **454 excess words** that year, against a previous record of 190 at the peak of the COVID-19 pandemic — and where the pandemic's excess words were topic nouns, 2024's were overwhelmingly _style_ words: 66% verbs, 14% adjectives. Juzek and Ward, working on scientific abstracts, put the pre/post ratio for _delving_ at roughly 2,240× and _showcasing_ at 1,396×.
+The measured effect is large. Kobak and colleagues compared 15.1 million PubMed abstracts against frequencies extrapolated from pre-ChatGPT trends. In 2024, _delves_ appeared at **28 times** its expected rate. They counted **454 excess words** that year, against a previous record of 190 at the peak of the COVID-19 pandemic. Where the pandemic's excess words were topic nouns, 2024's were overwhelmingly _style_ words: 66% verbs, 14% adjectives. Juzek and Ward, working on scientific abstracts, put the pre/post ratio for _delving_ at roughly 2,240× and _showcasing_ at 1,396×.
 
 ### Reinforcement learning rewards a register
 
@@ -159,23 +159,23 @@ Instruction tuning teaches the model to be helpful, balanced, and complete. Thos
 
 ### Markdown leaking into prose
 
-These systems are trained and served in Markdown. Most of that formatting is visibly structural — headings, bullets, bold — and gets stripped or noticed when text is moved somewhere else. The em dash is the exception: it is simultaneously a Markdown-era typographic habit and a legitimate piece of prose punctuation, so it survives the move. In our own corpus the gap is stark, **2.65 em dashes per thousand words in LLM text against 0.26 in the human control**, a tenfold difference. But this signal is decaying fastest of all: OpenAI explicitly tuned GPT-5.1 to suppress em dashes in late 2025, and by July 2026 _The Economist_ reported that among current models only Claude used them more than professional human writers.
+These systems are trained and served in Markdown. Most of that formatting is visibly structural (headings, bullets, bold) and gets stripped or noticed when text is moved somewhere else. The em dash is the exception: it is simultaneously a Markdown-era typographic habit and a legitimate piece of prose punctuation, so it survives the move. In our own corpus the gap is stark, **2.65 em dashes per thousand words in LLM text against 0.26 in the human control**, a tenfold difference. But this signal is decaying fastest of all: OpenAI explicitly tuned GPT-5.1 to suppress em dashes in late 2025, and by July 2026 _The Economist_ reported that among current models only Claude used them more than professional human writers.
 
 ### The interface bleeds through
 
-The highest-precision signals are not stylistic at all. They are machine artifacts — the internal citation markup a chatbot renders into its own web UI, copied out along with the text. ChatGPT leaves \`:contentReference[oaicite:16]\` and \`citeturn0search1\`. Gemini leaves \`[cite: 17]\` and \`[span_2](start_span)\`. Grok leaves \`<grok-card data-id=…>\`. DeepSeek leaves \`【85†L261-269】\`. Perplexity leaves \`[attached_file:1]\`. None of these is a writing habit. Each is proof that a specific product was in the loop.
+The highest-precision signals are not stylistic at all. They are machine artifacts: the internal citation markup a chatbot renders into its own web UI, copied out along with the text. ChatGPT leaves \`:contentReference[oaicite:16]\` and \`citeturn0search1\`. Gemini leaves \`[cite: 17]\` and \`[span_2](start_span)\`. Grok leaves \`<grok-card data-id=…>\`. DeepSeek leaves \`【85†L261-269】\`. Perplexity leaves \`[attached_file:1]\`. None of these is a writing habit. Each is proof that a specific product was in the loop.
 
-## 02 — Taxonomy: ${CATEGORIES.length} categories, ${totalPatterns} patterns
+## 02 · Taxonomy: ${CATEGORIES.length} categories, ${totalPatterns} patterns
 
 Ordered by severity. **Critical** means a machine artifact that a human typing prose essentially never produces. **Low** means an ordinary English word that is meaningless alone and only informative as density. Every regex below is the live source from the library, and every listed example is asserted in the test suite.
 
 ${mdCards}
 
-## 03 — Validation: What it actually catches
+## 03 · Validation: What it actually catches
 
 Claims about detection are cheap. These are measured numbers from a run you can reproduce with the code in the repository.
 
-Three corpora. The **AI article** set is 29 documented LLM outputs that Wikipedia editors archived as evidence when cleaning up machine-written drafts — real chatbot text that a real person pasted into a real encyclopedia. The **AI chat** set is 6 shorter samples in conversational register, from the same archive. The **human control** is 16 Wikipedia articles as they stood in December 2017, more than four years before ChatGPT shipped: same genre, same encyclopedic register, guaranteed pre-LLM.
+Three corpora. The **AI article** set is 29 documented LLM outputs that Wikipedia editors archived as evidence when cleaning up machine-written drafts: real chatbot text that a real person pasted into a real encyclopedia. The **AI chat** set is 6 shorter samples in conversational register, from the same archive. The **human control** is 16 Wikipedia articles as they stood in December 2017, more than four years before ChatGPT shipped: same genre, same encyclopedic register, guaranteed pre-LLM.
 
 **Score distribution**
 
@@ -187,7 +187,7 @@ Three corpora. The **AI article** set is 29 documented LLM outputs that Wikipedi
 
 The separation is real but the overlap matters more than the gap. No human document scored above 20. The lowest-scoring AI document scored 3.
 
-**Threshold sweep — AI article corpus vs human control**
+**Threshold sweep: AI article corpus vs human control**
 
 | Threshold | Recall | False positives | Precision |
 |---:|---:|---:|---:|
@@ -201,9 +201,9 @@ The separation is real but the overlap matters more than the gap. No human docum
 
 ### The signal that did not survive contact with data
 
-"Burstiness" — the idea that humans vary sentence length far more than machines — is the most widely repeated heuristic in this space and a documented input to commercial detectors. On this corpus it does nothing. Mean coefficient of variation in sentence length came out at **0.546 for the AI text and 0.606 for the human text**: a difference in the predicted direction, far too small to separate anything, and swamped by genre. Encyclopedic prose is uniform whoever writes it.
+"Burstiness" (the idea that humans vary sentence length far more than machines) is the most widely repeated heuristic in this space and a documented input to commercial detectors. On this corpus it does nothing. Mean coefficient of variation in sentence length came out at **0.546 for the AI text and 0.606 for the human text**: a difference in the predicted direction, far too small to separate anything, and swamped by genre. Encyclopedic prose is uniform whoever writes it.
 
-The em dash, by contrast, held up: **2.65 per thousand words versus 0.26**. So did the machine artifacts, at infinite lift — they appear in 17% of the AI documents and zero human ones, which is what you would expect of a signal that is not about writing at all.
+The em dash, by contrast, held up: **2.65 per thousand words versus 0.26**. So did the machine artifacts, at infinite lift; they appear in 17% of the AI documents and zero human ones, which is what you would expect of a signal that is not about writing at all.
 
 ### The noisiest category, and why it stays in
 
@@ -211,13 +211,13 @@ Three-item lists fire in **94% of the human documents** and 83% of the AI ones. 
 
 ### What the corpus could not test
 
-Three categories — model self-identification, editorialising hedges, and analysis-report register — recorded zero hits in _both_ corpora. They are not broken; their unit examples all pass. They are simply absent from Wikipedia-register text, because nobody leaves "As an AI language model" in an encyclopedia draft they are trying to get past reviewers, and encyclopedias do not say "the data paints a clear picture". Those three rest on documented examples alone, and are marked as such rather than quietly presented as validated.
+Three categories (model self-identification, editorialising hedges, and analysis-report register) recorded zero hits in _both_ corpora. They are not broken; their unit examples all pass. They are simply absent from Wikipedia-register text, because nobody leaves "As an AI language model" in an encyclopedia draft they are trying to get past reviewers, and encyclopedias do not say "the data paints a clear picture". Those three rest on documented examples alone, and are marked as such rather than quietly presented as validated.
 
-## 04 — Limits: Why detection keeps failing
+## 04 · Limits: Why detection keeps failing
 
-The industry's own numbers are the strongest argument against trusting any of this as evidence. OpenAI shipped an AI Text Classifier in January 2023 and withdrew it that July, citing low accuracy; its published figures were a **26% true-positive rate at a 9% false-positive rate** — a tool that missed three-quarters of machine text while wrongly accusing nearly one human document in eleven. Turnitin, which is still deployed at scale in education, states under 1% false positives at the document level but roughly **4% at the sentence level**. Weber-Wulff and colleagues tested fourteen tools in 2023 and concluded they were "neither accurate nor reliable", with detection degrading sharply on paraphrased, human-edited, or translated text.
+The industry's own numbers are the strongest argument against trusting any of this as evidence. OpenAI shipped an AI Text Classifier in January 2023 and withdrew it that July, citing low accuracy; its published figures were a **26% true-positive rate at a 9% false-positive rate**: a tool that missed three-quarters of machine text while wrongly accusing nearly one human document in eleven. Turnitin, which is still deployed at scale in education, states under 1% false positives at the document level but roughly **4% at the sentence level**. Weber-Wulff and colleagues tested fourteen tools in 2023 and concluded they were "neither accurate nor reliable", with detection degrading sharply on paraphrased, human-edited, or translated text.
 
-Then there is the bias, which is not a bug to be patched. Liang's TOEFL study found that running the human-written essays through ChatGPT to "enhance word choices to sound more like a native speaker" dropped their false-positive rate from 61.22% to **11.77%**. Running the reverse experiment — simplifying American students' essays to sound non-native — pushed their false-positive rate from 5.19% to **56.65%**. The detectors were not finding machines. They were finding low-perplexity prose, which is what you write when you are working carefully in your second language.
+Then there is the bias, which is not a bug to be patched. Liang's TOEFL study found that running the human-written essays through ChatGPT to "enhance word choices to sound more like a native speaker" dropped their false-positive rate from 61.22% to **11.77%**. Running the reverse experiment (simplifying American students' essays to sound non-native) pushed their false-positive rate from 5.19% to **56.65%**. The detectors were not finding machines. They were finding low-perplexity prose, which is what you write when you are working carefully in your second language.
 
 Every category in this file inherits that flaw, and the vocabulary category is where it bites hardest. Formal register, restricted synonym range, careful connectives: this is what good non-native academic English looks like, and it is also what the model does.
 
@@ -225,17 +225,17 @@ Every category in this file inherits that flaw, and the vocabulary category is w
 
 Wikipedia's editors track which words cluster in which model era. Their breakdown: _delve, tapestry, testament, pivotal, meticulous, intricate_ for GPT-4 through mid-2024; _align with, showcase, foster, enhance, vibrant_ for the GPT-4o period; _emphasising, highlighting, showcasing_ from mid-2025. _Delve_ itself, the most famous tell of all, dropped off sharply during 2025. The library tags patterns by era for this reason. Any wordlist of this kind is a photograph of a particular season of model releases, and it starts decaying the day it is written.
 
-It also decays because it is adversarial. Once a tell becomes notorious, it gets tuned out — as happened to the em dash in GPT-5.1. The signals that survive are the ones nobody is optimising against, which is precisely why the vendor citation artifacts are the most durable category here and the vocabulary list is the least.
+It also decays because it is adversarial. Once a tell becomes notorious, it gets tuned out, as happened to the em dash in GPT-5.1. The signals that survive are the ones nobody is optimising against, which is precisely why the vendor citation artifacts are the most durable category here and the vocabulary list is the least.
 
 > **What this is good for.** Linting your own drafts before you publish. Reviewing a pull request against a house style guide. Feeding the pattern list to a model as instructions for what not to write. Getting a fast second opinion on prose that feels off, before you reread it properly yourself.
 >
 > **What it is not good for.** Grading students. Screening job applicants. Moderation decisions. Anything where a person bears a cost for being wrongly flagged.
 
-## 05 — The tool: SlopDetector
+## 05 · The tool: SlopDetector
 
 Everything above, as something you can actually use. Paste prose and every match is highlighted in place; click one to see which rule fired, why models produce it, and how it earns false positives.
 
-It runs entirely in your browser — no upload, no logging, verifiable in view-source. The engine is not a reimplementation: the page is generated by a build step that inlines the same two modules the command-line linter and the HTTP API import, so all three surfaces return identical findings for identical input. That equivalence is asserted by a test, which is how a real discrepancy surfaced: one rule shipped disabled in the CLI and enabled in the API, because the default lived in the wrong file.
+It runs entirely in your browser: no upload, no logging, verifiable in view-source. The engine is not a reimplementation, since the page is generated by a build step that inlines the same two modules the command-line linter and the HTTP API import, so all three surfaces return identical findings for identical input. That equivalence is asserted by a test, which is how a real discrepancy surfaced: one rule shipped disabled in the CLI and enabled in the API, because the default lived in the wrong file.
 
 **[Open SlopDetector →](https://slopdetector.me)**
 
@@ -249,7 +249,7 @@ The catalogue ships as a zero-dependency npm package with a CLI, an ESLint-style
 | CLI | \`npx slop "docs/**/*.md"\` | Pre-commit hooks, CI gates, editors |
 | API | \`npx -p ai-text-patterns slop-serve\` | Other apps, pipelines, deployment |
 
-The CLI exits \`0\` clean, \`1\` on a lint failure and \`2\` on a config error, so a broken config never masquerades as a prose problem. Critical-tier rules — the vendor citation artifacts — are the only ones worth gating a build on.
+The CLI exits \`0\` clean, \`1\` on a lint failure and \`2\` on a config error, so a broken config never masquerades as a prose problem. Critical-tier rules (the vendor citation artifacts) are the only ones worth gating a build on.
 
 ## Sources
 
@@ -262,7 +262,7 @@ The CLI exits \`0\` clean, \`1\` on a lint failure and \`2\` on a config error, 
 7. Merrill, Chen & Kumer. [What are the clues that ChatGPT wrote something?](https://www.washingtonpost.com/technology/interactive/2025/how-detect-chatgpt-em-dash/) _The Washington Post_, 13 Nov 2025.
 8. [How to spot AI writing](https://www.economist.com/culture/2026/07/30/how-to-spot-ai-writing). _The Economist_, 30 Jul 2026.
 9. [Understanding the false positive rate for sentences](https://www.turnitin.com/blog/understanding-the-false-positive-rate-for-sentences-of-our-ai-writing-detection-capability). Turnitin, 14 Jun 2023.
-10. [Anti-AI Writing Guide for Robots](https://aiwritingguide.misterburton.com) — a machine-readable rendering of the Wikipedia catalogue, exportable as a system prompt.
+10. [Anti-AI Writing Guide for Robots](https://aiwritingguide.misterburton.com): a machine-readable rendering of the Wikipedia catalogue, exportable as a system prompt.
 
 ## Method
 
@@ -289,7 +289,7 @@ const html = `<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Fingerprints of Machine Prose</title>
-<meta name="description" content="A tested regex catalogue of the surface patterns that mark English text as LLM-generated — with honest false-positive numbers.">
+<meta name="description" content="A tested regex catalogue of the surface patterns that mark English text as LLM-generated, with honest false-positive numbers.">
 <link rel="canonical" href="https://about.slopdetector.me/">
 <link rel="alternate" type="text/markdown" href="https://about.slopdetector.me/index.md">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
@@ -297,14 +297,14 @@ const html = `<!DOCTYPE html>
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="SlopDetector">
 <meta property="og:title" content="The Fingerprints of Machine Prose">
-<meta property="og:description" content="A tested regex catalogue of the surface patterns that mark English text as LLM-generated — with honest false-positive numbers.">
+<meta property="og:description" content="A tested regex catalogue of the surface patterns that mark English text as LLM-generated, with honest false-positive numbers.">
 <meta property="og:url" content="https://about.slopdetector.me/">
 <meta property="og:image" content="https://about.slopdetector.me/og_default.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="The Fingerprints of Machine Prose">
-<meta name="twitter:description" content="A tested regex catalogue of the surface patterns that mark English text as LLM-generated — with honest false-positive numbers.">
+<meta name="twitter:description" content="A tested regex catalogue of the surface patterns that mark English text as LLM-generated, with honest false-positive numbers.">
 <meta name="twitter:image" content="https://about.slopdetector.me/og_default.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -544,16 +544,16 @@ footer a:hover{text-decoration:underline}
 
     <h3 class="sub">Frequency regression</h3>
     <p>A language model samples from a probability distribution over tokens. Averaged across millions of generations, its output drifts toward whatever was statistically common in training, then further toward whatever human raters rewarded. Specific facts get replaced by generic, positive-sounding description because generic description is what the distribution says comes next.</p>
-    <p>The measured effect is large. Kobak and colleagues compared 15.1 million PubMed abstracts against frequencies extrapolated from pre-ChatGPT trends. In 2024, <em>delves</em> appeared at <strong>28 times</strong> its expected rate. They counted <strong>454 excess words</strong> that year, against a previous record of 190 at the peak of the COVID-19 pandemic — and where the pandemic's excess words were topic nouns, 2024's were overwhelmingly <em>style</em> words: 66% verbs, 14% adjectives. Juzek and Ward, working on scientific abstracts, put the pre/post ratio for <em>delving</em> at roughly 2,240× and <em>showcasing</em> at 1,396×.</p>
+    <p>The measured effect is large. Kobak and colleagues compared 15.1 million PubMed abstracts against frequencies extrapolated from pre-ChatGPT trends. In 2024, <em>delves</em> appeared at <strong>28 times</strong> its expected rate. They counted <strong>454 excess words</strong> that year, against a previous record of 190 at the peak of the COVID-19 pandemic. Where the pandemic's excess words were topic nouns, 2024's were overwhelmingly <em>style</em> words: 66% verbs, 14% adjectives. Juzek and Ward, working on scientific abstracts, put the pre/post ratio for <em>delving</em> at roughly 2,240× and <em>showcasing</em> at 1,396×.</p>
 
     <h3 class="sub">Reinforcement learning rewards a register</h3>
     <p>Instruction tuning teaches the model to be helpful, balanced, and complete. Those are conversational virtues, and they produce conversational artifacts: the acknowledgement before the answer, the hedge that reminds you results may vary, the summary paragraph that closes a section you have just finished reading. Juzek and Ward found that learning from human feedback <em>amplifies</em> frequency biases already present in pre-training, rather than smoothing them out.</p>
 
     <h3 class="sub">Markdown leaking into prose</h3>
-    <p>These systems are trained and served in Markdown. Most of that formatting is visibly structural — headings, bullets, bold — and gets stripped or noticed when text is moved somewhere else. The em dash is the exception: it is simultaneously a Markdown-era typographic habit and a legitimate piece of prose punctuation, so it survives the move. In our own corpus the gap is stark, <strong>2.65 em dashes per thousand words in LLM text against 0.26 in the human control</strong>, a tenfold difference. But this signal is decaying fastest of all: OpenAI explicitly tuned GPT-5.1 to suppress em dashes in late 2025, and by July 2026 <em>The Economist</em> reported that among current models only Claude used them more than professional human writers.</p>
+    <p>These systems are trained and served in Markdown. Most of that formatting is visibly structural (headings, bullets, bold) and gets stripped or noticed when text is moved somewhere else. The em dash is the exception: it is simultaneously a Markdown-era typographic habit and a legitimate piece of prose punctuation, so it survives the move. In our own corpus the gap is stark, <strong>2.65 em dashes per thousand words in LLM text against 0.26 in the human control</strong>, a tenfold difference. But this signal is decaying fastest of all: OpenAI explicitly tuned GPT-5.1 to suppress em dashes in late 2025, and by July 2026 <em>The Economist</em> reported that among current models only Claude used them more than professional human writers.</p>
 
     <h3 class="sub">The interface bleeds through</h3>
-    <p>The highest-precision signals are not stylistic at all. They are machine artifacts — the internal citation markup a chatbot renders into its own web UI, copied out along with the text. ChatGPT leaves <code>:contentReference[oaicite:16]</code> and <code>citeturn0search1</code>. Gemini leaves <code>[cite: 17]</code> and <code>[span_2](start_span)</code>. Grok leaves <code>&lt;grok-card data-id=…&gt;</code>. DeepSeek leaves <code>【85†L261-269】</code>. Perplexity leaves <code>[attached_file:1]</code>. None of these is a writing habit. Each is proof that a specific product was in the loop.</p>
+    <p>The highest-precision signals are not stylistic at all. They are machine artifacts: the internal citation markup a chatbot renders into its own web UI, copied out along with the text. ChatGPT leaves <code>:contentReference[oaicite:16]</code> and <code>citeturn0search1</code>. Gemini leaves <code>[cite: 17]</code> and <code>[span_2](start_span)</code>. Grok leaves <code>&lt;grok-card data-id=…&gt;</code>. DeepSeek leaves <code>【85†L261-269】</code>. Perplexity leaves <code>[attached_file:1]</code>. None of these is a writing habit. Each is proof that a specific product was in the loop.</p>
   </div>
 </section>
 
@@ -575,7 +575,7 @@ footer a:hover{text-decoration:underline}
     <h2 class="big">What it actually catches</h2>
     <p class="lede">Claims about detection are cheap. These are measured numbers from a run you can reproduce with the code below.</p>
 
-    <p>Three corpora. The <strong>AI article</strong> set is 29 documented LLM outputs that Wikipedia editors archived as evidence when cleaning up machine-written drafts — real chatbot text that a real person pasted into a real encyclopedia. The <strong>AI chat</strong> set is 6 shorter samples in conversational register, from the same archive. The <strong>human control</strong> is 16 Wikipedia articles as they stood in December 2017, more than four years before ChatGPT shipped: same genre, same encyclopedic register, guaranteed pre-LLM.</p>
+    <p>Three corpora. The <strong>AI article</strong> set is 29 documented LLM outputs that Wikipedia editors archived as evidence when cleaning up machine-written drafts: real chatbot text that a real person pasted into a real encyclopedia. The <strong>AI chat</strong> set is 6 shorter samples in conversational register, from the same archive. The <strong>human control</strong> is 16 Wikipedia articles as they stood in December 2017, more than four years before ChatGPT shipped: same genre, same encyclopedic register, guaranteed pre-LLM.</p>
 
     <div class="tbl-wrap">
       <table>
@@ -593,7 +593,7 @@ footer a:hover{text-decoration:underline}
 
     <div class="tbl-wrap">
       <table>
-        <caption>Threshold sweep — AI article corpus vs human control</caption>
+        <caption>Threshold sweep: AI article corpus vs human control</caption>
         <thead><tr><th class="num">Threshold</th><th class="num">Recall</th><th class="num">False positives</th><th class="num">Precision</th></tr></thead>
         <tbody>
           <tr><td class="num">15</td><td class="num">83%</td><td class="num pos">25%</td><td class="num">86%</td></tr>
@@ -610,14 +610,14 @@ footer a:hover{text-decoration:underline}
     </div>
 
     <h3 class="sub">The signal that did not survive contact with data</h3>
-    <p>"Burstiness" — the idea that humans vary sentence length far more than machines — is the most widely repeated heuristic in this space and a documented input to commercial detectors. On this corpus it does nothing. Mean coefficient of variation in sentence length came out at <strong>0.546 for the AI text and 0.606 for the human text</strong>: a difference in the predicted direction, far too small to separate anything, and swamped by genre. Encyclopedic prose is uniform whoever writes it.</p>
-    <p>The em dash, by contrast, held up: <strong>2.65 per thousand words versus 0.26</strong>. So did the machine artifacts, at infinite lift — they appear in 17% of the AI documents and zero human ones, which is what you would expect of a signal that is not about writing at all.</p>
+    <p>"Burstiness" (the idea that humans vary sentence length far more than machines) is the most widely repeated heuristic in this space and a documented input to commercial detectors. On this corpus it does nothing. Mean coefficient of variation in sentence length came out at <strong>0.546 for the AI text and 0.606 for the human text</strong>: a difference in the predicted direction, far too small to separate anything, and swamped by genre. Encyclopedic prose is uniform whoever writes it.</p>
+    <p>The em dash, by contrast, held up: <strong>2.65 per thousand words versus 0.26</strong>. So did the machine artifacts, at infinite lift; they appear in 17% of the AI documents and zero human ones, which is what you would expect of a signal that is not about writing at all.</p>
 
     <h3 class="sub">The noisiest category, and why it stays in</h3>
     <p>Three-item lists fire in <strong>94% of the human documents</strong> and 83% of the AI ones. Measured by document presence the category is worse than useless. Measured by density it still carries a 4.4× lift, because the AI text stacks triads at 3.11 per thousand words against 0.71. It is kept, weighted low, capped hard, and labelled as the highest false-positive family in the file. That is the honest treatment of a weak signal: keep it visible, never let it drive a verdict.</p>
 
     <h3 class="sub">What the corpus could not test</h3>
-    <p>Three categories — model self-identification, editorialising hedges, and analysis-report register — recorded zero hits in <em>both</em> corpora. They are not broken; their unit examples all pass. They are simply absent from Wikipedia-register text, because nobody leaves "As an AI language model" in an encyclopedia draft they are trying to get past reviewers, and encyclopedias do not say "the data paints a clear picture". Those three rest on documented examples alone, and are marked as such rather than quietly presented as validated.</p>
+    <p>Three categories (model self-identification, editorialising hedges, and analysis-report register) recorded zero hits in <em>both</em> corpora. They are not broken; their unit examples all pass. They are simply absent from Wikipedia-register text, because nobody leaves "As an AI language model" in an encyclopedia draft they are trying to get past reviewers, and encyclopedias do not say "the data paints a clear picture". Those three rest on documented examples alone, and are marked as such rather than quietly presented as validated.</p>
   </div>
 </section>
 
@@ -626,16 +626,16 @@ footer a:hover{text-decoration:underline}
     <div class="sec-label">04 — Limits</div>
     <h2 class="big">Why detection keeps failing</h2>
 
-    <p>The industry's own numbers are the strongest argument against trusting any of this as evidence. OpenAI shipped an AI Text Classifier in January 2023 and withdrew it that July, citing low accuracy; its published figures were a <strong>26% true-positive rate at a 9% false-positive rate</strong> — a tool that missed three-quarters of machine text while wrongly accusing nearly one human document in eleven. Turnitin, which is still deployed at scale in education, states under 1% false positives at the document level but roughly <strong>4% at the sentence level</strong>. Weber-Wulff and colleagues tested fourteen tools in 2023 and concluded they were "neither accurate nor reliable", with detection degrading sharply on paraphrased, human-edited, or translated text.</p>
+    <p>The industry's own numbers are the strongest argument against trusting any of this as evidence. OpenAI shipped an AI Text Classifier in January 2023 and withdrew it that July, citing low accuracy; its published figures were a <strong>26% true-positive rate at a 9% false-positive rate</strong>: a tool that missed three-quarters of machine text while wrongly accusing nearly one human document in eleven. Turnitin, which is still deployed at scale in education, states under 1% false positives at the document level but roughly <strong>4% at the sentence level</strong>. Weber-Wulff and colleagues tested fourteen tools in 2023 and concluded they were "neither accurate nor reliable", with detection degrading sharply on paraphrased, human-edited, or translated text.</p>
 
-    <p>Then there is the bias, which is not a bug to be patched. Liang's TOEFL study found that running the human-written essays through ChatGPT to "enhance word choices to sound more like a native speaker" dropped their false-positive rate from 61.22% to <strong>11.77%</strong>. Running the reverse experiment — simplifying American students' essays to sound non-native — pushed their false-positive rate from 5.19% to <strong>56.65%</strong>. The detectors were not finding machines. They were finding low-perplexity prose, which is what you write when you are working carefully in your second language.</p>
+    <p>Then there is the bias, which is not a bug to be patched. Liang's TOEFL study found that running the human-written essays through ChatGPT to "enhance word choices to sound more like a native speaker" dropped their false-positive rate from 61.22% to <strong>11.77%</strong>. Running the reverse experiment (simplifying American students' essays to sound non-native) pushed their false-positive rate from 5.19% to <strong>56.65%</strong>. The detectors were not finding machines. They were finding low-perplexity prose, which is what you write when you are working carefully in your second language.</p>
 
     <p>Every category in this file inherits that flaw, and the vocabulary category is where it bites hardest. Formal register, restricted synonym range, careful connectives: this is what good non-native academic English looks like, and it is also what the model does.</p>
 
     <h3 class="sub">The target moves</h3>
     <p>Wikipedia's editors track which words cluster in which model era. Their breakdown: <em>delve, tapestry, testament, pivotal, meticulous, intricate</em> for GPT-4 through mid-2024; <em>align with, showcase, foster, enhance, vibrant</em> for the GPT-4o period; <em>emphasising, highlighting, showcasing</em> from mid-2025. <em>Delve</em> itself, the most famous tell of all, dropped off sharply during 2025. The library tags patterns by era for this reason. Any wordlist of this kind is a photograph of a particular season of model releases, and it starts decaying the day it is written.</p>
 
-    <p>It also decays because it is adversarial. Once a tell becomes notorious, it gets tuned out — as happened to the em dash in GPT-5.1. The signals that survive are the ones nobody is optimising against, which is precisely why the vendor citation artifacts are the most durable category here and the vocabulary list is the least.</p>
+    <p>It also decays because it is adversarial. Once a tell becomes notorious, it gets tuned out, as happened to the em dash in GPT-5.1. The signals that survive are the ones nobody is optimising against, which is precisely why the vendor citation artifacts are the most durable category here and the vocabulary list is the least.</p>
 
     <div class="callout">
       <p><strong>What this is good for.</strong> Linting your own drafts before you publish. Reviewing a pull request against a house style guide. Feeding the pattern list to a model as instructions for what not to write. Getting a fast second opinion on prose that feels off, before you reread it properly yourself.</p>
@@ -652,8 +652,8 @@ footer a:hover{text-decoration:underline}
     match is highlighted in place; click one to see which rule fired, why models produce it,
     and how it earns false positives.</p>
 
-    <p>It runs entirely in your browser — no upload, no logging, verifiable in view-source.
-    The engine is not a reimplementation: the page is generated by a build step that inlines the
+    <p>It runs entirely in your browser: no upload, no logging, verifiable in view-source.
+    The engine is not a reimplementation, since the page is generated by a build step that inlines the
     same two modules the command-line linter and the HTTP API import, so all three surfaces
     return identical findings for identical input. That equivalence is asserted by a test, which
     is how a real discrepancy surfaced: one rule shipped disabled in the CLI and enabled in the
@@ -681,8 +681,8 @@ footer a:hover{text-decoration:underline}
       </table>
     </div>
     <p>The CLI exits <code>0</code> clean, <code>1</code> on a lint failure and <code>2</code> on a
-    config error, so a broken config never masquerades as a prose problem. Critical-tier rules —
-    the vendor citation artifacts — are the only ones worth gating a build on.</p>
+    config error, so a broken config never masquerades as a prose problem. Critical-tier rules
+    (the vendor citation artifacts) are the only ones worth gating a build on.</p>
   </div>
 </section>
 
@@ -701,7 +701,7 @@ footer a:hover{text-decoration:underline}
           <li>Merrill, Chen &amp; Kumer. <a href="https://www.washingtonpost.com/technology/interactive/2025/how-detect-chatgpt-em-dash/" target="_blank" rel="noopener noreferrer">What are the clues that ChatGPT wrote something?</a> <em>The Washington Post</em>, 13 Nov 2025.</li>
           <li><a href="https://www.economist.com/culture/2026/07/30/how-to-spot-ai-writing" target="_blank" rel="noopener noreferrer">How to spot AI writing</a>. <em>The Economist</em>, 30 Jul 2026.</li>
           <li><a href="https://www.turnitin.com/blog/understanding-the-false-positive-rate-for-sentences-of-our-ai-writing-detection-capability" target="_blank" rel="noopener noreferrer">Understanding the false positive rate for sentences</a>. Turnitin, 14 Jun 2023.</li>
-          <li><a href="https://aiwritingguide.misterburton.com" target="_blank" rel="noopener noreferrer">Anti-AI Writing Guide for Robots</a> — a machine-readable rendering of the Wikipedia catalogue, exportable as a system prompt.</li>
+          <li><a href="https://aiwritingguide.misterburton.com" target="_blank" rel="noopener noreferrer">Anti-AI Writing Guide for Robots</a>: a machine-readable rendering of the Wikipedia catalogue, exportable as a system prompt.</li>
         </ol>
       </div>
       <div>
