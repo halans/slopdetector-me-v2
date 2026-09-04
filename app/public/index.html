@@ -219,7 +219,7 @@ footer a:hover{text-decoration:underline}
 
 <header class="mast">
   <div class="wrap">
-    <div class="brand">slop<span>/</span>patterns</div>
+    <div class="brand">SlopDetector: slop<span>/</span>patterns</div>
     <nav>
       <a href="#mechanism">Mechanism</a>
       <a href="#taxonomy">Taxonomy</a>
@@ -253,7 +253,7 @@ footer a:hover{text-decoration:underline}
 
 <section id="mechanism">
   <div class="wrap">
-    <div class="sec-label">01 · Mechanism</div>
+    <div class="sec-label">01 — Mechanism</div>
     <h2 class="big">Why the house style exists</h2>
     <p class="lede">The tells are not random. Each family of them traces back to something specific in how these models are built and served.</p>
 
@@ -275,7 +275,7 @@ footer a:hover{text-decoration:underline}
 <section id="taxonomy">
   <div class="wrap">
     <div class="narrow" style="margin-bottom:8px">
-      <div class="sec-label">02 · Taxonomy</div>
+      <div class="sec-label">02 — Taxonomy</div>
       <h2 class="big">20 categories, 95 patterns</h2>
       <p class="lede">Ordered by severity. <strong>Critical</strong> means a machine artifact that a human typing prose essentially never produces. <strong>Low</strong> means an ordinary English word that is meaningless alone and only informative as density. Every regex below is the live source from the library, and every listed example is asserted in the test suite.</p>
     </div>
@@ -1656,7 +1656,7 @@ footer a:hover{text-decoration:underline}
 
 <section id="validation">
   <div class="wrap">
-    <div class="sec-label">03 · Validation</div>
+    <div class="sec-label">03 — Validation</div>
     <h2 class="big">What it actually catches</h2>
     <p class="lede">Claims about detection are cheap. These are measured numbers from a run you can reproduce with the code below.</p>
 
@@ -1708,7 +1708,7 @@ footer a:hover{text-decoration:underline}
 
 <section id="limits">
   <div class="wrap">
-    <div class="sec-label">04 · Limits</div>
+    <div class="sec-label">04 — Limits</div>
     <h2 class="big">Why detection keeps failing</h2>
 
     <p>The industry's own numbers are the strongest argument against trusting any of this as evidence. OpenAI shipped an AI Text Classifier in January 2023 and withdrew it that July, citing low accuracy; its published figures were a <strong>26% true-positive rate at a 9% false-positive rate</strong>: a tool that missed three-quarters of machine text while wrongly accusing nearly one human document in eleven. Turnitin, which is still deployed at scale in education, states under 1% false positives at the document level but roughly <strong>4% at the sentence level</strong>. Weber-Wulff and colleagues tested fourteen tools in 2023 and concluded they were "neither accurate nor reliable", with detection degrading sharply on paraphrased, human-edited, or translated text.</p>
@@ -1731,7 +1731,7 @@ footer a:hover{text-decoration:underline}
 
 <section id="tool">
   <div class="wrap">
-    <div class="sec-label">05 · The tool</div>
+    <div class="sec-label">05 — The tool</div>
     <h2 class="big">SlopDetector</h2>
     <p class="lede">Everything above, as something you can actually use. Paste prose and every
     match is highlighted in place; click one to see which rule fired, why models produce it,
@@ -1768,6 +1768,7 @@ footer a:hover{text-decoration:underline}
     <p>The CLI exits <code>0</code> clean, <code>1</code> on a lint failure and <code>2</code> on a
     config error, so a broken config never masquerades as a prose problem. Critical-tier rules
     (the vendor citation artifacts) are the only ones worth gating a build on.</p>
+    <p>Find it on <a href="https://github.com/halans/ai-pattern-detection" target="_blank" rel="noopener noreferrer">Github</a></p>
   </div>
 </section>
 
