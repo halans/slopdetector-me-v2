@@ -500,15 +500,15 @@ export const CATEGORIES = [
       },
       {
         id: 'not_just_its',
-        re: /\bnot (?:just|merely|simply)\b[^.!?\n]{1,80}?[,;—-]\s*(?:it(?:'s| is)|they(?:'re| are)|but)\b/gi,
+        re: /\bnot (?:just|merely|simply)\b[^.!?\n]{1,80}?[,.;:—-]\s*(?:it(?:'s| is)|they(?:'re| are)|but)\b/gi,
         note: '',
-        examples: ["It's not just a phone — it's a platform."]
+        examples: ["It's not just a phone — it's a platform.", "It's not just a tool. It's a paradigm shift."]
       },
       {
         id: 'its_not_its',
-        re: /\bit(?:'s| is)\s+not\s+(?:about\s+)?[^.!?\n]{1,60}?[,;—-]\s*it(?:'s| is)\b/gi,
+        re: /\bit(?:'s| is)\s+not\s+(?:about\s+)?[^.!?\n]{1,60}?[,.;:—-]\s*it(?:'s| is)\b/gi,
         note: '',
-        examples: ["It's not about speed, it's about accuracy."]
+        examples: ["It's not about speed, it's about accuracy.", "It's not simply a design choice. It's a fundamental philosophy."]
       },
       {
         id: 'no_no_just',
@@ -518,9 +518,9 @@ export const CATEGORIES = [
       },
       {
         id: 'isnt_x_its_y',
-        re: /\b(?:this|that|it|there)\s+(?:is|was)\s?n(?:'|o)t\s+[^.!?\n]{1,60}?[—-]\s*(?:it(?:'s| is)|that(?:'s| is))\b/gi,
-        note: 'Em-dash-joined variant.',
-        examples: ["This isn't a setback — it's a redirection."]
+        re: /\b(?:this|that|it|there)\s+(?:is|was)\s?n(?:'|o)t\s+[^.!?\n]{1,60}?[,.;:—-]\s*(?:it(?:'s| is)|that(?:'s| is))\b/gi,
+        note: 'Dash, comma, colon, or sentence-boundary joined variant.',
+        examples: ["This isn't a setback — it's a redirection.", "This isn't a setback. It's a redirection."]
       },
       {
         id: 'rather_than_contrast',
