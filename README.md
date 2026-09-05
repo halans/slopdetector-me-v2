@@ -56,6 +56,21 @@ node build-page.mjs
 `app/public/` must exist first — `writeFileSync` does not create missing
 directories. One-time setup: `mkdir -p public` (from `app/`).
 
+### Markdown content negotiation
+
+`app/functions/_middleware.js` is a Cloudflare Pages Function: a request to
+`/` or `/index.html` whose `Accept` header prefers `text/markdown` over
+`text/html` (e.g. `curl -H "Accept: text/markdown" https://about.slopdetector.me/`)
+gets served `public/index.md` at that same URL instead of the HTML page, so
+an AI agent can fetch the article as plain markdown without knowing the
+separate `/index.md` URL exists. Ordinary browsers, which send an explicit
+`text/html` entry, are unaffected. Both responses carry `Vary: Accept` so
+edge/browser caches don't serve the wrong format to the wrong client.
+
+This requires the Cloudflare Pages project's root directory to be `app`
+(functions live alongside the `public` build output) — move the `functions`
+directory if your project is configured differently.
+
 ## Standalone web tool
 
 `app/tool/build-tool.mjs` generates a single self-contained HTML page
