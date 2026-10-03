@@ -585,6 +585,37 @@ export const CATEGORIES = [
 
   /* ---------------------------------------------------------------- */
   {
+    id: 'defensive_denials',
+    label: 'Defensive denials',
+    severity: 'low',
+    weight: 2,
+    cap: 12,
+    why:
+      'Short "Not X." fragments that disclaim a claim nobody made. One is ' +
+      'honesty. A page full of them reads as defensive, because every denial ' +
+      'implies a reader who was about to accuse the writer of it.',
+    caution:
+      'Plain, accurate scoping ("Not covered by the warranty.") is good ' +
+      'writing. This is a density signal only: judge by how many appear per ' +
+      'page, not by any single one.',
+    patterns: [
+      {
+        id: 'not_fragment',
+        re: /(?:(?:^|[.!?]\s+)Not|^[ \t]*[-*+]\s+[Nn]ot)\s+(?!(?:only|yet|sure|really|quite|necessarily|no|to|that|all|every|everyone|everything|many|much|surprisingly)\b)\w[^.!?\n]{1,50}(?=[.!?]|$)/gm,
+        note: 'A sentence or bullet of 50 characters or fewer that opens with "Not".',
+        examples: ['Not SEO promises.', 'Not a promise of 100 backlinks.', '- not the whole internet']
+      },
+      {
+        id: 'not_no_echo',
+        re: /(?:^|[.!?]\s+)(?:[-*+]\s+)?Not no\s+\w+(?:\s+\w+){0,3}/gm,
+        note: 'The "No X. Not no Y." echo.',
+        examples: ['No matches. Not no possibilities.']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
     id: 'rule_of_three',
     label: 'Mechanical triads',
     severity: 'medium',

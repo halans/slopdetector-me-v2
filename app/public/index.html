@@ -37,7 +37,7 @@
   "inLanguage": "en",
   "isAccessibleForFree": true,
   "license": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
-  "dateModified": "2026-09-04T23:11:41.167Z",
+  "dateModified": "2026-10-03T23:32:56.906Z",
   "author": {
     "@type": "Organization",
     "name": "SlopDetector",
@@ -265,7 +265,7 @@ footer a:hover{text-decoration:underline}
 
 <div class="wrap">
   <div class="hero">
-    <div class="kicker">Computational stylistics · 95 patterns · 20 categories</div>
+    <div class="kicker">Computational stylistics · 97 patterns &bull; 21 categories</div>
     <h1>The fingerprints of machine prose</h1>
     <p class="standfirst">Large language models have a house style. It is measurable, it is documented in the peer-reviewed literature, and a good deal of it can be caught with regular expressions. Here is the full catalogue, the JavaScript to run it, and the false-positive numbers nobody publishing an "AI detector" wants to show you.</p>
     <div class="hero-meta">
@@ -309,10 +309,10 @@ footer a:hover{text-decoration:underline}
   <div class="wrap">
     <div class="narrow" style="margin-bottom:8px">
       <div class="sec-label">02 — Taxonomy</div>
-      <h2 class="big">20 categories, 95 patterns</h2>
+      <h2 class="big">21 categories, 97 patterns</h2>
       <p class="lede">Ordered by severity. <strong>Critical</strong> means a machine artifact that a human typing prose essentially never produces. <strong>Low</strong> means an ordinary English word that is meaningless alone and only informative as density. Every regex below is the live source from the library, and every listed example is asserted in the test suite.</p>
     </div>
-    <div class="toc"><a href="#cat-tool_artifacts" class="toc-item" data-sev="critical"><span class="dot"></span>Chatbot tool artifacts</a><a href="#cat-ai_self_reference" class="toc-item" data-sev="critical"><span class="dot"></span>Model self-identification</a><a href="#cat-placeholder_text" class="toc-item" data-sev="critical"><span class="dot"></span>Unfilled placeholders</a><a href="#cat-knowledge_cutoff" class="toc-item" data-sev="high"><span class="dot"></span>Knowledge-cutoff and source-gap hedging</a><a href="#cat-collaborative_scaffolding" class="toc-item" data-sev="high"><span class="dot"></span>Conversational scaffolding</a><a href="#cat-emoji_formatting" class="toc-item" data-sev="high"><span class="dot"></span>Emoji as structure</a><a href="#cat-significance_statements" class="toc-item" data-sev="medium"><span class="dot"></span>Significance and legacy inflation</a><a href="#cat-participial_tackon" class="toc-item" data-sev="medium"><span class="dot"></span>Trailing participial commentary</a><a href="#cat-negative_parallelism" class="toc-item" data-sev="medium"><span class="dot"></span>Negative parallelism</a><a href="#cat-rule_of_three" class="toc-item" data-sev="medium"><span class="dot"></span>Mechanical triads</a><a href="#cat-ritual_conclusion" class="toc-item" data-sev="medium"><span class="dot"></span>Ritual conclusions</a><a href="#cat-challenges_and_future" class="toc-item" data-sev="medium"><span class="dot"></span>Challenges-and-future formula</a><a href="#cat-vague_attribution" class="toc-item" data-sev="medium"><span class="dot"></span>Vague attribution</a><a href="#cat-editorial_hedging" class="toc-item" data-sev="medium"><span class="dot"></span>Editorialising hedges</a><a href="#cat-promotional_puffery" class="toc-item" data-sev="medium"><span class="dot"></span>Promotional puffery</a><a href="#cat-formatting_tells" class="toc-item" data-sev="medium"><span class="dot"></span>Structural formatting tells</a><a href="#cat-copula_avoidance" class="toc-item" data-sev="low"><span class="dot"></span>Copula avoidance</a><a href="#cat-ai_vocabulary" class="toc-item" data-sev="low"><span class="dot"></span>Overrepresented vocabulary</a><a href="#cat-business_jargon" class="toc-item" data-sev="low"><span class="dot"></span>Consulting jargon</a><a href="#cat-data_analysis_phrases" class="toc-item" data-sev="low"><span class="dot"></span>Analysis-report register</a></div>
+    <div class="toc"><a href="#cat-tool_artifacts" class="toc-item" data-sev="critical"><span class="dot"></span>Chatbot tool artifacts</a><a href="#cat-ai_self_reference" class="toc-item" data-sev="critical"><span class="dot"></span>Model self-identification</a><a href="#cat-placeholder_text" class="toc-item" data-sev="critical"><span class="dot"></span>Unfilled placeholders</a><a href="#cat-knowledge_cutoff" class="toc-item" data-sev="high"><span class="dot"></span>Knowledge-cutoff and source-gap hedging</a><a href="#cat-collaborative_scaffolding" class="toc-item" data-sev="high"><span class="dot"></span>Conversational scaffolding</a><a href="#cat-emoji_formatting" class="toc-item" data-sev="high"><span class="dot"></span>Emoji as structure</a><a href="#cat-significance_statements" class="toc-item" data-sev="medium"><span class="dot"></span>Significance and legacy inflation</a><a href="#cat-participial_tackon" class="toc-item" data-sev="medium"><span class="dot"></span>Trailing participial commentary</a><a href="#cat-negative_parallelism" class="toc-item" data-sev="medium"><span class="dot"></span>Negative parallelism</a><a href="#cat-rule_of_three" class="toc-item" data-sev="medium"><span class="dot"></span>Mechanical triads</a><a href="#cat-ritual_conclusion" class="toc-item" data-sev="medium"><span class="dot"></span>Ritual conclusions</a><a href="#cat-challenges_and_future" class="toc-item" data-sev="medium"><span class="dot"></span>Challenges-and-future formula</a><a href="#cat-vague_attribution" class="toc-item" data-sev="medium"><span class="dot"></span>Vague attribution</a><a href="#cat-editorial_hedging" class="toc-item" data-sev="medium"><span class="dot"></span>Editorialising hedges</a><a href="#cat-promotional_puffery" class="toc-item" data-sev="medium"><span class="dot"></span>Promotional puffery</a><a href="#cat-formatting_tells" class="toc-item" data-sev="medium"><span class="dot"></span>Structural formatting tells</a><a href="#cat-defensive_denials" class="toc-item" data-sev="low"><span class="dot"></span>Defensive denials</a><a href="#cat-copula_avoidance" class="toc-item" data-sev="low"><span class="dot"></span>Copula avoidance</a><a href="#cat-ai_vocabulary" class="toc-item" data-sev="low"><span class="dot"></span>Overrepresented vocabulary</a><a href="#cat-business_jargon" class="toc-item" data-sev="low"><span class="dot"></span>Consulting jargon</a><a href="#cat-data_analysis_phrases" class="toc-item" data-sev="low"><span class="dot"></span>Analysis-report register</a></div>
     <div class="cats">
     <article class="cat" id="cat-tool_artifacts" data-sev="critical">
       <header class="cat-head">
@@ -330,7 +330,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> Internal citation and rendering markup that leaks when a user copies a chatbot answer out of the web UI. Each vendor has its own signature.</p>
       <p class="caution"><strong>False positives.</strong> Almost none. The only realistic false positive is an article that quotes these markers while discussing AI detection, such as this one.</p>
       <details class="pats">
-        <summary>10 patterns · 40 pts each, capped at 60</summary>
+        <summary>10 patterns &bull; 40 pts each, capped at 60</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -451,7 +451,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> The assistant describing its own nature or limits. Refusal and disclaimer boilerplate that was never edited out.</p>
       <p class="caution"><strong>False positives.</strong> Quoted examples in writing about AI. Check whether the phrase sits inside quotation marks.</p>
       <details class="pats">
-        <summary>4 patterns · 35 pts each, capped at 50</summary>
+        <summary>4 patterns &bull; 35 pts each, capped at 50</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -512,7 +512,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> Template slots the model emitted for a human to fill, shipped unfilled.</p>
       <p class="caution"><strong>False positives.</strong> Documentation and code samples use angle-bracket placeholders on purpose. Restrict this check to prose, not code blocks.</p>
       <details class="pats">
-        <summary>4 patterns · 25 pts each, capped at 40</summary>
+        <summary>4 patterns &bull; 25 pts each, capped at 40</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -573,7 +573,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> The model signalling that its training data ran out, or narrating the thinness of its own retrieved sources instead of just omitting the claim.</p>
       <p class="caution"><strong>False positives.</strong> Legitimate scholarship does say "records are scarce". The tell is the first-person framing and the reference to "available information".</p>
       <details class="pats">
-        <summary>6 patterns · 14 pts each, capped at 40</summary>
+        <summary>6 patterns &bull; 14 pts each, capped at 40</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -654,7 +654,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> Turn-taking pleasantries from the chat interface. RLHF rewards them; they have no function inside a finished document.</p>
       <p class="caution"><strong>False positives.</strong> Genuine correspondence, teaching material, and newsletters legitimately address a reader. Weigh by genre: an encyclopedia entry should have none.</p>
       <details class="pats">
-        <summary>7 patterns · 12 pts each, capped at 45</summary>
+        <summary>7 patterns &bull; 12 pts each, capped at 45</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -745,7 +745,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> Decorating headings and bullets with a leading pictograph. Rare in edited prose in any genre outside social posts and release notes.</p>
       <p class="caution"><strong>False positives.</strong> Changelogs, README files, Slack messages, and consumer newsletters use emoji headings by convention. Genre-dependent.</p>
       <details class="pats">
-        <summary>4 patterns · 12 pts each, capped at 36</summary>
+        <summary>4 patterns &bull; 12 pts each, capped at 36</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -806,7 +806,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> Rather than state a fact and stop, the model appends a claim about why the fact matters. This is the single most characteristic move in LLM encyclopedic prose, and the hardest for the model to suppress.</p>
       <p class="caution"><strong>False positives.</strong> Obituaries, award citations, and advocacy writing make these claims sincerely. Density matters more than any single instance.</p>
       <details class="pats">
-        <summary>8 patterns · 7 pts each, capped at 45</summary>
+        <summary>8 patterns &bull; 7 pts each, capped at 45</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -907,7 +907,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> A comma followed by an "-ing" clause that adds evaluation rather than information. The model uses it to make a bare fact feel analysed.</p>
       <p class="caution"><strong>False positives.</strong> Perfectly grammatical and sometimes genuinely informative. The tell is that the clause could be deleted with zero loss of meaning.</p>
       <details class="pats">
-        <summary>3 patterns · 8 pts each, capped at 40</summary>
+        <summary>3 patterns &bull; 8 pts each, capped at 40</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -958,7 +958,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> Defining something by first denying a lesser description. Documented as a stereotypical AI construction by the Washington Post, The Economist, and Russell et al. (ACL 2025).</p>
       <p class="caution"><strong>False positives.</strong> A real rhetorical device with a long human pedigree. Speechwriting and myth-busting listicles use it deliberately. Repetition is the tell.</p>
       <details class="pats">
-        <summary>6 patterns · 10 pts each, capped at 45</summary>
+        <summary>6 patterns &bull; 10 pts each, capped at 45</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -1039,7 +1039,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> LLMs reach for three-item lists far more often than the content warrants, especially adjective triads used to pad a thin claim.</p>
       <p class="caution"><strong>False positives.</strong> Highest false-positive category in this file. Three-item lists are ordinary English. Only meaningful when several appear per paragraph.</p>
       <details class="pats">
-        <summary>2 patterns · 5 pts each, capped at 25</summary>
+        <summary>2 patterns &bull; 5 pts each, capped at 25</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -1080,7 +1080,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> Chat answers are trained to close with a wrap-up. Transplanted into an article, the summary restates what the reader just read.</p>
       <p class="caution"><strong>False positives.</strong> Academic papers and reports have legitimate conclusion sections. The tell is a summary paragraph closing every section, not just the piece.</p>
       <details class="pats">
-        <summary>3 patterns · 9 pts each, capped at 30</summary>
+        <summary>3 patterns &bull; 9 pts each, capped at 30</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -1131,7 +1131,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> A structural template: concede a difficulty, then reassure. It fills space without adding a single verifiable fact.</p>
       <p class="caution"><strong>False positives.</strong> Strategy documents and policy briefs are supposed to do this. Judge by whether the challenges are named specifically or gestured at.</p>
       <details class="pats">
-        <summary>5 patterns · 9 pts each, capped at 30</summary>
+        <summary>5 patterns &bull; 9 pts each, capped at 30</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -1202,7 +1202,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> Consensus asserted without a nameable source. The model cannot cite what it does not have, so it invokes an anonymous collective.</p>
       <p class="caution"><strong>False positives.</strong> Journalism uses "experts say" under real deadline constraints. The question to ask is whether a name appears anywhere nearby.</p>
       <details class="pats">
-        <summary>5 patterns · 8 pts each, capped at 35</summary>
+        <summary>5 patterns &bull; 8 pts each, capped at 35</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -1273,7 +1273,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> Instructing the reader how to weigh a fact instead of presenting it. Safety training rewards this register heavily.</p>
       <p class="caution"><strong>False positives.</strong> Common in genuine explanatory and pedagogical writing.</p>
       <details class="pats">
-        <summary>4 patterns · 6 pts each, capped at 30</summary>
+        <summary>4 patterns &bull; 6 pts each, capped at 30</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -1334,7 +1334,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> Travel-brochure register. The model reaches for evaluative adjectives when it lacks specific facts about a place, person, or product.</p>
       <p class="caution"><strong>False positives.</strong> Marketing copy is supposed to sound like this. Only a tell in registers that claim neutrality.</p>
       <details class="pats">
-        <summary>5 patterns · 6 pts each, capped at 35</summary>
+        <summary>5 patterns &bull; 6 pts each, capped at 35</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -1405,7 +1405,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> Markdown habits from the chat interface surviving into a document: bolded label lists, title-case headings, gratuitous horizontal rules.</p>
       <p class="caution"><strong>False positives.</strong> These are legitimate formatting choices. They only become evidence when they appear in a venue whose house style forbids them.</p>
       <details class="pats">
-        <summary>5 patterns · 6 pts each, capped at 30</summary>
+        <summary>5 patterns &bull; 6 pts each, capped at 30</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -1461,6 +1461,47 @@ footer a:hover{text-decoration:underline}
       </details>
     </article>
 
+    <article class="cat" id="cat-defensive_denials" data-sev="low">
+      <header class="cat-head">
+        <div class="cat-title">
+          <span class="sev sev-low">low</span>
+          <h3>Defensive denials</h3>
+          <code class="cat-id">defensive_denials</code>
+        </div>
+        <dl class="cat-stats">
+          <div><dt>AI /1k words</dt><dd>—</dd></div>
+          <div><dt>human /1k</dt><dd>—</dd></div>
+          <div><dt>lift</dt><dd>—</dd></div>
+        </dl>
+      </header>
+      <p class="why"><strong>Why it happens.</strong> Short "Not X." fragments that disclaim a claim nobody made. One is honesty. A page full of them reads as defensive, because every denial implies a reader who was about to accuse the writer of it.</p>
+      <p class="caution"><strong>False positives.</strong> Plain, accurate scoping ("Not covered by the warranty.") is good writing. This is a density signal only: judge by how many appear per page, not by any single one.</p>
+      <details class="pats">
+        <summary>2 patterns &bull; 2 pts each, capped at 12</summary>
+        
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">not_fragment</code>
+          
+          
+        </div>
+        <p class="pat-note">A sentence or bullet of 50 characters or fewer that opens with "Not".</p>
+        <pre class="rx"><code>/(?:(?:^|[.!?]\s+)Not|^[ \t]*[-*+]\s+[Nn]ot)\s+(?!(?:only|yet|sure|really|quite|necessarily|no|to|that|all|every|everyone|everything|many|much|surprisingly)\b)\w[^.!?\n]{1,50}(?=[.!?]|$)/gm</code></pre>
+        <ul class="ex"><li><span>Not SEO promises.</span></li><li><span>Not a promise of 100 backlinks.</span></li><li><span>- not the whole internet</span></li></ul>
+      </div>
+      <div class="pat">
+        <div class="pat-head">
+          <code class="pat-id">not_no_echo</code>
+          
+          
+        </div>
+        <p class="pat-note">The "No X. Not no Y." echo.</p>
+        <pre class="rx"><code>/(?:^|[.!?]\s+)(?:[-*+]\s+)?Not no\s+\w+(?:\s+\w+){0,3}/gm</code></pre>
+        <ul class="ex"><li><span>No matches. Not no possibilities.</span></li></ul>
+      </div>
+      </details>
+    </article>
+
     <article class="cat" id="cat-copula_avoidance" data-sev="low">
       <header class="cat-head">
         <div class="cat-title">
@@ -1477,7 +1518,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> LLMs substitute elaborate verbs for "is", "are", and "has". Geng &amp; Trotta measured a &gt;10% drop in "is"/"are" in academic writing in 2023.</p>
       <p class="caution"><strong>False positives.</strong> Each of these verbs has honest uses. This is a density signal only.</p>
       <details class="pats">
-        <summary>3 patterns · 3 pts each, capped at 24</summary>
+        <summary>3 patterns &bull; 3 pts each, capped at 24</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -1528,7 +1569,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> Words whose post-2022 frequency jumped measurably. Kobak et al. (2025) found "delves" at 28x its extrapolated 2024 frequency in PubMed abstracts; Juzek &amp; Ward report even larger ratios for "delving" and "showcasing" in scientific abstracts.</p>
       <p class="caution"><strong>False positives.</strong> Every one of these is an ordinary English word. A single use means nothing whatsoever. Clustering is the only meaningful signal, and this category is the primary driver of bias against non-native English writers, who tend toward formal register. Weight accordingly.</p>
       <details class="pats">
-        <summary>4 patterns · 2 pts each, capped at 30</summary>
+        <summary>4 patterns &bull; 2 pts each, capped at 30</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -1589,7 +1630,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> Corporate register the model defaults to for any business-adjacent prompt, regardless of whether the subject is commercial.</p>
       <p class="caution"><strong>False positives.</strong> A real dialect spoken by real people in real meetings. Only a tell outside its native habitat.</p>
       <details class="pats">
-        <summary>3 patterns · 3 pts each, capped at 24</summary>
+        <summary>3 patterns &bull; 3 pts each, capped at 24</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -1640,7 +1681,7 @@ footer a:hover{text-decoration:underline}
       <p class="why"><strong>Why it happens.</strong> Formulaic framing the model wraps around numbers, often when the numbers themselves are thin or unsourced.</p>
       <p class="caution"><strong>False positives.</strong> Standard in analyst reports and data journalism.</p>
       <details class="pats">
-        <summary>4 patterns · 4 pts each, capped at 24</summary>
+        <summary>4 patterns &bull; 4 pts each, capped at 24</summary>
         
       <div class="pat">
         <div class="pat-head">
@@ -1834,6 +1875,7 @@ footer a:hover{text-decoration:underline}
     </div>
     <div class="colophon">
       Pattern catalogue derived from Wikipedia:Signs of AI writing, used under CC BY-NC-SA 4.0; this page and the library carry the same licence. Measurements were produced on a corpus of 63,143 words and should be read as indicative of that corpus, not as general accuracy claims.
+      <br>2026 &bull; <a href="llms.txt">llms.txt</a>
     </div>
   </div>
 </footer>

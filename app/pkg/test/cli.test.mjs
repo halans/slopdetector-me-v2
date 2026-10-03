@@ -123,7 +123,7 @@ test('sarif reporter emits schema-shaped output', () => {
   assert.equal(d.version, '2.1.0');
   const run0 = d.runs[0];
   assert.equal(run0.tool.driver.name, 'ai-text-patterns');
-  assert.equal(run0.tool.driver.rules.length, 20);
+  assert.equal(run0.tool.driver.rules.length, 21);
   assert.ok(run0.results.length > 0);
   const loc = run0.results[0].locations[0].physicalLocation;
   assert.ok(loc.artifactLocation.uri && loc.region.startLine > 0);
@@ -142,7 +142,7 @@ test('github reporter emits workflow commands with escaped properties', () => {
 test('rules subcommand lists all rules', () => {
   const r = run(['rules']);
   assert.equal(r.status, 0);
-  assert.match(r.stdout, /20 rules, 95 patterns/);
+  assert.match(r.stdout, /21 rules, 97 patterns/);
   assert.match(r.stdout, /rule_of_three ships off/);
 });
 

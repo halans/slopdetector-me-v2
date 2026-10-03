@@ -237,7 +237,10 @@ async function main() {
   return summary.failed ? EXIT_LINT : EXIT_OK;
 }
 
+// Set exitCode and let the event loop drain rather than calling process.exit():
+// exit() can cut off a large write to a pipe, which truncated SARIF/JSON
+// output at 8 KiB when a CI step captured stdout.
 main().then(
-  (code) => process.exit(code),
-  (err) => { console.error(err?.stack ?? String(err)); process.exit(EXIT_USAGE); }
+  (code) => { process.exitCode = code; },
+  (err) => { console.error(err?.stack ?? String(err)); process.exitCode = EXIT_USAGE; }
 );

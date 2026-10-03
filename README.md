@@ -3,7 +3,7 @@
 ## ai-text-patterns
 
 A regex catalogue of surface patterns characteristic of LLM-generated English
-prose: 20 categories, 95 sub-patterns, with a scoring helper and honest
+prose: 21 categories, 97 sub-patterns, with a scoring helper and honest
 false-positive numbers.
 
 **This is a style linter, not an authorship detector.** See the "Limits"

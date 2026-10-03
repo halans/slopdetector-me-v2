@@ -118,7 +118,7 @@ const mdCards = [...CATEGORIES]
     const m = MEASURED[cat.id] || {};
     const pats = cat.patterns.map((p) => {
       const lines = [
-        `- \`${p.id}\`${p.vendor ? ` (${p.vendor})` : ''}${p.era ? ` &bull; ${p.era}` : ''}`
+        `- \`${p.id}\`${p.vendor ? ` (${p.vendor})` : ''}${p.era ? ` · ${p.era}` : ''}`
       ];
       if (p.note) lines.push(`  ${mdEscape(p.note)}`);
       lines.push(`  \`${String(p.re)}\``);
@@ -131,13 +131,13 @@ const mdCards = [...CATEGORIES]
     return [
       `### [${cat.severity}] ${mdEscape(cat.label)} \`${cat.id}\``,
       '',
-      `AI /1k words: ${m.ai ?? '—'} &bull; human /1k: ${m.hu ?? '—'} &bull; lift: ${liftLabel(cat.id)}`,
+      `AI /1k words: ${m.ai ?? '—'} · human /1k: ${m.hu ?? '—'} · lift: ${liftLabel(cat.id)}`,
       '',
       `**Why it happens.** ${mdEscape(cat.why)}`,
       '',
       `**False positives.** ${mdEscape(cat.caution)}`,
       '',
-      `${cat.patterns.length} pattern${cat.patterns.length > 1 ? 's' : ''} &bull; ${cat.weight} pts each, capped at ${cat.cap}:`,
+      `${cat.patterns.length} pattern${cat.patterns.length > 1 ? 's' : ''} · ${cat.weight} pts each, capped at ${cat.cap}:`,
       '',
       pats
     ].join('\n');
@@ -147,11 +147,11 @@ const md = `# The Fingerprints of Machine Prose
 
 _A tested regex catalogue of the surface patterns that mark English text as LLM-generated, with honest false-positive numbers._
 
-Computational stylistics &bull; ${totalPatterns} patterns &bull; ${CATEGORIES.length} categories
+Computational stylistics · ${totalPatterns} patterns · ${CATEGORIES.length} categories
 
 Large language models have a house style. It is measurable, it is documented in the peer-reviewed literature, and a good deal of it can be caught with regular expressions. Here is the full catalogue, the JavaScript to run it, and the false-positive numbers nobody publishing an "AI detector" wants to show you.
 
-Corpus: **63,143 words** &bull; Human control: **frozen Dec 2017** &bull; Self-test: **101/101** &bull; License: **CC BY-NC-SA 4.0**
+Corpus: **63,143 words** · Human control: **frozen Dec 2017** · Self-test: **101/101** · License: **CC BY-NC-SA 4.0**
 
 ## Read this before you use any of it
 

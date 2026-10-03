@@ -1,7 +1,7 @@
 # ai-text-patterns
 
-Lint prose for the stylistic fingerprints of LLM-generated text. 20 rule
-categories, 95 regex patterns, validated against a human control corpus.
+Lint prose for the stylistic fingerprints of LLM-generated text. 21 rule
+categories, 97 regex patterns, validated against a human control corpus.
 Zero dependencies.
 
 ```

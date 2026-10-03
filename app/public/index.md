@@ -2,7 +2,7 @@
 
 _A tested regex catalogue of the surface patterns that mark English text as LLM-generated, with honest false-positive numbers._
 
-Computational stylistics · 95 patterns · 20 categories
+Computational stylistics · 97 patterns · 21 categories
 
 Large language models have a house style. It is measurable, it is documented in the peer-reviewed literature, and a good deal of it can be caught with regular expressions. Here is the full catalogue, the JavaScript to run it, and the false-positive numbers nobody publishing an "AI detector" wants to show you.
 
@@ -16,7 +16,7 @@ The distinction is not pedantic. In 2023 Liang and colleagues ran seven commerci
 
 Use these patterns to reread your own sentences. Do not use them to accuse anybody of anything.
 
-## 01 · Mechanism: Why the house style exists
+## 01 — Mechanism: Why the house style exists
 
 The tells are not random. Each family of them traces back to something specific in how these models are built and served.
 
@@ -38,7 +38,7 @@ These systems are trained and served in Markdown. Most of that formatting is vis
 
 The highest-precision signals are not stylistic at all. They are machine artifacts: the internal citation markup a chatbot renders into its own web UI, copied out along with the text. ChatGPT leaves `:contentReference[oaicite:16]` and `citeturn0search1`. Gemini leaves `[cite: 17]` and `[span_2](start_span)`. Grok leaves `<grok-card data-id=…>`. DeepSeek leaves `【85†L261-269】`. Perplexity leaves `[attached_file:1]`. None of these is a writing habit. Each is proof that a specific product was in the loop.
 
-## 02 · Taxonomy: 20 categories, 95 patterns
+## 02 — Taxonomy: 21 categories, 97 patterns
 
 Ordered by severity. **Critical** means a machine artifact that a human typing prose essentially never produces. **Low** means an ordinary English word that is meaningless alone and only informative as density. Every regex below is the live source from the library, and every listed example is asserted in the test suite.
 
@@ -494,6 +494,25 @@ AI /1k words: 1.15 · human /1k: 0 · lift: ∞ (zero human hits)
   Examples: `# Overview
 ## Background`
 
+### [low] Defensive denials `defensive_denials`
+
+AI /1k words: — · human /1k: — · lift: —
+
+**Why it happens.** Short "Not X." fragments that disclaim a claim nobody made. One is honesty. A page full of them reads as defensive, because every denial implies a reader who was about to accuse the writer of it.
+
+**False positives.** Plain, accurate scoping ("Not covered by the warranty.") is good writing. This is a density signal only: judge by how many appear per page, not by any single one.
+
+2 patterns · 2 pts each, capped at 12:
+
+- `not_fragment`
+  A sentence or bullet of 50 characters or fewer that opens with "Not".
+  `/(?:(?:^|[.!?]\s+)Not|^[ \t]*[-*+]\s+[Nn]ot)\s+(?!(?:only|yet|sure|really|quite|necessarily|no|to|that|all|every|everyone|everything|many|much|surprisingly)\b)\w[^.!?\n]{1,50}(?=[.!?]|$)/gm`
+  Examples: `Not SEO promises.`, `Not a promise of 100 backlinks.`, `- not the whole internet`
+- `not_no_echo`
+  The "No X. Not no Y." echo.
+  `/(?:^|[.!?]\s+)(?:[-*+]\s+)?Not no\s+\w+(?:\s+\w+){0,3}/gm`
+  Examples: `No matches. Not no possibilities.`
+
 ### [low] Copula avoidance `copula_avoidance`
 
 AI /1k words: 0.73 · human /1k: 0.46 · lift: 1.6×
@@ -582,7 +601,7 @@ AI /1k words: 0 · human /1k: 0 · lift: not exercised
   `/\b(?:indicat(?:es?|ing)|suggest(?:s|ing)?|point(?:s|ing)? to) a (?:growing|clear|strong|significant|notable|marked|worrying|promising) (?:trend|shift|correlation|pattern|increase|decline)\b/gi`
   Examples: `This points to a growing trend.`
 
-## 03 · Validation: What it actually catches
+## 03 — Validation: What it actually catches
 
 Claims about detection are cheap. These are measured numbers from a run you can reproduce with the code in the repository.
 
@@ -624,7 +643,7 @@ Three-item lists fire in **94% of the human documents** and 83% of the AI ones. 
 
 Three categories (model self-identification, editorialising hedges, and analysis-report register) recorded zero hits in _both_ corpora. They are not broken; their unit examples all pass. They are simply absent from Wikipedia-register text, because nobody leaves "As an AI language model" in an encyclopedia draft they are trying to get past reviewers, and encyclopedias do not say "the data paints a clear picture". Those three rest on documented examples alone, and are marked as such rather than quietly presented as validated.
 
-## 04 · Limits: Why detection keeps failing
+## 04 — Limits: Why detection keeps failing
 
 The industry's own numbers are the strongest argument against trusting any of this as evidence. OpenAI shipped an AI Text Classifier in January 2023 and withdrew it that July, citing low accuracy; its published figures were a **26% true-positive rate at a 9% false-positive rate**: a tool that missed three-quarters of machine text while wrongly accusing nearly one human document in eleven. Turnitin, which is still deployed at scale in education, states under 1% false positives at the document level but roughly **4% at the sentence level**. Weber-Wulff and colleagues tested fourteen tools in 2023 and concluded they were "neither accurate nor reliable", with detection degrading sharply on paraphrased, human-edited, or translated text.
 
@@ -642,7 +661,7 @@ It also decays because it is adversarial. Once a tell becomes notorious, it gets
 >
 > **What it is not good for.** Grading students. Screening job applicants. Moderation decisions. Anything where a person bears a cost for being wrongly flagged.
 
-## 05 · The tool: SlopDetector
+## 05 — The tool: SlopDetector
 
 Everything above, as something you can actually use. Paste prose and every match is highlighted in place; click one to see which rule fired, why models produce it, and how it earns false positives.
 

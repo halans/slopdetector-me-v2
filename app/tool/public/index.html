@@ -289,7 +289,7 @@ footer a:hover{color:var(--accent)}
 /* ===================================================================
  * SlopDetector engine — inlined verbatim from the ai-text-patterns
  * npm package at build time. Do not edit here; edit pkg/src/ and rerun
- * tool/build-tool.mjs. Generated 2026-09-04T22:52:38.860Z
+ * tool/build-tool.mjs. Generated 2026-10-03T23:32:27.483Z
  * =================================================================== */
 /**
  * ai-text-patterns.js
@@ -872,6 +872,37 @@ const CATEGORIES = [
         re: /\b(?:prioriti[sz]ing|choosing|favou?ring|emphasi[sz]ing|seeking)\b[^.!?\n]{1,70}?\brather than\b/gi,
         note: 'The reversed form; common in Grok output.',
         examples: ['...prioritizing consolidation rather than ideological purity.']
+      }
+    ]
+  },
+
+  /* ---------------------------------------------------------------- */
+  {
+    id: 'defensive_denials',
+    label: 'Defensive denials',
+    severity: 'low',
+    weight: 2,
+    cap: 12,
+    why:
+      'Short "Not X." fragments that disclaim a claim nobody made. One is ' +
+      'honesty. A page full of them reads as defensive, because every denial ' +
+      'implies a reader who was about to accuse the writer of it.',
+    caution:
+      'Plain, accurate scoping ("Not covered by the warranty.") is good ' +
+      'writing. This is a density signal only: judge by how many appear per ' +
+      'page, not by any single one.',
+    patterns: [
+      {
+        id: 'not_fragment',
+        re: /(?:(?:^|[.!?]\s+)Not|^[ \t]*[-*+]\s+[Nn]ot)\s+(?!(?:only|yet|sure|really|quite|necessarily|no|to|that|all|every|everyone|everything|many|much|surprisingly)\b)\w[^.!?\n]{1,50}(?=[.!?]|$)/gm,
+        note: 'A sentence or bullet of 50 characters or fewer that opens with "Not".',
+        examples: ['Not SEO promises.', 'Not a promise of 100 backlinks.', '- not the whole internet']
+      },
+      {
+        id: 'not_no_echo',
+        re: /(?:^|[.!?]\s+)(?:[-*+]\s+)?Not no\s+\w+(?:\s+\w+){0,3}/gm,
+        note: 'The "No X. Not no Y." echo.',
+        examples: ['No matches. Not no possibilities.']
       }
     ]
   },
